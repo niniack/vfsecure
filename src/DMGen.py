@@ -9,7 +9,7 @@ hgt = len(img)
 if not img[0,0]:
     img = np.logical_not(img)
 cellsize = 0
-col = -1 #minus one because 0 is 1
+col = - 1 #minus one because 0 is 1
 while not img[0,col-1]:
     cellsize = cellsize + 1
     col = col - 1
