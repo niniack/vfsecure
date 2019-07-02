@@ -1,8 +1,12 @@
-a = [[1,2,3], [4,5,6], [1,2,3]]
+import numpy as np
+a = [[[1,2,3], [4,5,6], [1,2,3]],[[1,2,3], [4,5,6], [1,2,3]]]
 b = [1,2,3]
 
+print(a)
+print("\n")
+a = np.insert(a, 3, -1, axis=2)
+print(a)
 
-[print(i) for i,x in enumerate(a) if x==1]
-
-
-rows,columns = np.where(np.all(model == vertices, axis=2))
+a[0,:,3] = 5
+print("\n")
+print(a)
