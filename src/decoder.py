@@ -21,7 +21,7 @@ ATTR_COUNT = 1
 # import cv2
 # from pyzbar.pyzbar import decode
 
-class load:
+class decoder:
 
 	numTriangles=None
 	filename=None
@@ -70,18 +70,18 @@ class load:
 		cls.mem = np.insert(cls.mem, 3, -1, axis=2)
 
 	@classmethod
-	def findForm(cls, rowloc):
+	def findForm(cls, rowloc, formTag):
 
 		form = []
 		model = cls.vertices[rowloc][0]
 
-		cls._formDefiner(model, form,  0)
+		cls._formDefiner(model, form,  formTag)
 
 		i=1
 		while i in range(len(form)):
 			for j in range(3):
 				model = form[i][j]
-				form = cls._formDefiner(model, form, i)
+				form = cls._formDefiner(model, form, formTag)
 			i += 1
 
 		cls.numForms += 1
@@ -110,7 +110,21 @@ class load:
 
 		return formExist
 
+	@classmethod
+	def findRotation(cls, modelTag, subjectTag):
 
+		mRows, mVertices = np.where(cls.mem[:,:,3] == modelTag)
+		sRows, sVertices = np.where(cls.mem[:,:,3] == subjectTag)
+		mRows = set(mRows)
+		pp(mRows)
+
+
+		# choose a reference sphere
+		# select a sphere to compare with
+		# choose a triangle on the reference sphere
+		# find the same triangle on the other sphere using its area
+		# separate function: calculate the diff in angle between the two vectors
+		#
 
 def plotForm(form, fig, ax):
 
@@ -137,22 +151,23 @@ def main():
 	    print ("File", args.filename, "does not exist.")
 	    sys.exit(1)
 
-	mesh = load()
+	mesh = decoder()
 	mesh.readSTL(args.filename)
 
-	fig = plt.figure()
-	ax = fig.gca(projection='3d')
+	# fig = plt.figure()
+	# ax = fig.gca(projection='3d')
 
+	formTag = 0
 
-	for rowloc in range(int(mesh.numTriangles)):
+	for rowloc in range(int(2500)):
 		formExist = mesh.checkForm(rowloc)
 		if (formExist == False):
-			form = mesh.findForm(rowloc)
-			plotForm(form, fig, ax)
+			form = mesh.findForm(rowloc, formTag)
+			formTag += 1
+			# plotForm(form, fig, ax)
+	mesh.findRotation(1,2)
 
-	pp(mesh.mem)
-	pp(mesh.numForms)
-	plt.show()
+
 
 
 	# origins = findCircumcenter(mesh.vectors, int(mesh.numTriangles))

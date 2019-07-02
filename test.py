@@ -1,12 +1,5 @@
 import numpy as np
-a = [[[1,2,3], [4,5,6], [1,2,3]],[[1,2,3], [4,5,6], [1,2,3]]]
+a = [[[1,2,3], [4,5,6], [9,2,5]],[[1,2,3], [6,4,3], [2,8,4]]]
 b = [1,2,3]
 
-print(a)
-print("\n")
-a = np.insert(a, 3, -1, axis=2)
-print(a)
-
-a[0,:,3] = 5
-print("\n")
-print(a)
+result = np.where(np.all(cls.mem[:,0,3] == modelTag, axis=2))
