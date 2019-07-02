@@ -115,8 +115,29 @@ class decoder:
 
 		mRows, mVertices = np.where(cls.mem[:,:,3] == modelTag)
 		sRows, sVertices = np.where(cls.mem[:,:,3] == subjectTag)
-		mRows = set(mRows)
-		pp(mRows)
+
+		# converted to set to remove duplicates, then back to list for indexing
+		mRows = list(set(mRows))
+		sRows = list(set(sRows))
+
+		mV = cls.vertices[mRows[0]]
+
+
+		mTri = cls.triangleArea(mV)
+		pp(mTri)
+
+		for row in range(len(sRows)):
+			sV = cls.vertices[sRows[row]]
+			sTri = cls.triangleArea(sV)
+			pp(sTri)
+			if (sTri == mTri):
+				pp("wooden mouse")
+				pp(row)
+
+
+
+		# modelNormals = cls.normals[mRows[1]]
+		# pp(modelNormals)
 
 
 		# choose a reference sphere
@@ -125,6 +146,17 @@ class decoder:
 		# find the same triangle on the other sphere using its area
 		# separate function: calculate the diff in angle between the two vectors
 		#
+	@classmethod
+	def triangleArea(cls, vertices):
+		# area = 1/2*(V x W)
+		v1 = vertices[1]-vertices[0]
+		v2 = vertices[2]-vertices[0]
+
+		cross = np.cross(v1,v2)
+		mag = np.linalg.norm(cross)
+		area = (0.5)*mag
+
+		return area
 
 def plotForm(form, fig, ax):
 
@@ -159,7 +191,7 @@ def main():
 
 	formTag = 0
 
-	for rowloc in range(int(2500)):
+	for rowloc in range(int(2300)):
 		formExist = mesh.checkForm(rowloc)
 		if (formExist == False):
 			form = mesh.findForm(rowloc, formTag)
