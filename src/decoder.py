@@ -114,7 +114,7 @@ class decoder:
 		return formExist
 
 	@classmethod
-	def makeForm(cls, modelTag):
+	def findPoleNormal(cls, modelTag):
 
 		# modelNormals = cls.normals[mRows[1]]
 		# pp(modelNormals)
@@ -127,6 +127,8 @@ class decoder:
 		# separate function: calculate the diff in angle between the two vectors
 		#
 
+
+
 		mRows, mColumns = np.where(cls.mem[:,:,3] == modelTag)
 		mRows = list(set(mRows))
 		mV = np.zeros((len(mRows), 3, 3))
@@ -134,8 +136,12 @@ class decoder:
 		for i in range(len(mRows)):
 			mV[i] = cls.vertices[mRows[i]]
 
-		points, hits, poles = cls.findPole(mV)
+		poles = cls._findPole(mV)
 
+		# didn't bother use poles[0] because its the direct opposite
+		# v1 = x,y,z
+		# v2 = -x,-y,-z
+		# so just invert it
 		pRows, pCols = np.nonzero(np.all(mV == poles[1], axis=2))
 		pRows = list(set(pRows.tolist()))
 
@@ -155,7 +161,8 @@ class decoder:
 		poleFaceNormals = poleFaceNormals[np.isfinite(poleFaceNormals)]
 		poleFaceNormals = np.reshape(poleFaceNormals, [int(poleFaceNormals.size/3),3])
 		poleVertexNormal = np.mean(poleFaceNormals, axis=0)
-		pp(poleVertexNormal)
+		return(poleVertexNormal)
+
 		# origins = findCircumcenter(poleFaces, 14)
 		# plotNormals(origins, poleFaceNormals, 14)
 
@@ -180,7 +187,7 @@ class decoder:
 
 
 	@classmethod
-	def findPole(cls, vertices):
+	def _findPole(cls, vertices):
 
 		vertices = np.reshape(vertices, (int(vertices.size/3), 3))
 
@@ -198,9 +205,10 @@ class decoder:
 		poles[0] = points[int(poleLocs[0])]
 		poles[1] = points[int(poleLocs[1])]
 
-		return points, hits, poles
+		return poles
 		# pp(hits)
 		# return hits, highestHitRows
+
 
 
 def plotForm(form, fig, ax):
@@ -216,44 +224,6 @@ def plotForm(form, fig, ax):
 			zdata.append(form[i][j][2])
 
 	ax.scatter(xdata, ydata, zdata, c=zdata)
-
-def findCircumcenter(vectors,dim):
-
-	triOrigins = np.empty([dim,3])
-
-	for i in range(dim):
-		triOrigins[i][0] = (vectors[i][0][0]+vectors[i][1][0]+vectors[i][2][0])/3
-		triOrigins[i][1] = (vectors[i][0][1]+vectors[i][1][1]+vectors[i][2][1])/3
-		triOrigins[i][2] = (vectors[i][0][2]+vectors[i][1][2]+vectors[i][2][2])/3
-
-	return triOrigins
-
-def plotNormals(origins,normals,dim):
-
-	x = np.empty([dim,1])
-	y = np.empty([dim,1])
-	z = np.empty([dim,1])
-	u = np.empty([dim,1])
-	v = np.empty([dim,1])
-	w = np.empty([dim,1])
-
-	fig = plt.figure()
-	ax = fig.gca(projection='3d')
-
-
-
-	for i in range(dim):
-		x[i] = origins[i][0]
-		y[i] = origins[i][1]
-		z[i] = origins[i][2]
-		u[i] = normals[i][0]
-		v[i] = normals[i][1]
-		w[i] = normals[i][2]
-
-	ax.quiver(x,y,z,u,v,w,length=0.1, normalize=True)
-
-	plt.show()
-
 
 def main():
 
@@ -279,7 +249,7 @@ def main():
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
 			# plotForm(form, fig, ax)
-	mesh.makeForm(3)
+	mesh.findPoleNormal(3)
 	# plt.show()
 
 
