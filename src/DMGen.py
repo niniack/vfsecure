@@ -6,6 +6,7 @@ import numpy as np
 import operator
 import math
 import random
+import matplotlib.pyplot as plt
 
 img = imread('barcode.png')
 
@@ -73,11 +74,10 @@ y1=y
 #     y = cellsize * math.floor(y/cellsize) + cellsize/2
 #     print('b')
 
-print(x,y)
 
 leftbuff = x - codedim/2
 rightbuff = fogdim - leftbuff
-axis=0
+axis = 0
 
 pad_size = rightbuff - a.shape[axis]
 axis_nb = len(a.shape)
@@ -89,7 +89,7 @@ if pad_size >= 0:
 
 leftbuff = y - codedim/2
 rightbuff = fogdim - leftbuff
-axis=1
+axis = 1
 
 pad_size = rightbuff - a.shape[axis]
 axis_nb = len(a.shape)
@@ -99,7 +99,57 @@ if pad_size >= 0:
     b = np.pad(a, pad_width=npad, mode='constant', constant_values=0)
 
 
-print(b,b.shape)
+#print(b,b.shape)
+density = 0.5
+placed = []
+count = 1
+#for y in range(1,fogdim):
+noc = 158
+coords = []
+redo = 1
+for i in range(noc):
+    x = random.randint(0,fogdim)
+    y = random.randint(0,fogdim)
 
-for x in range(fogdim):
-    print(b[5][x])
+    XY = [x,y]
+    redo = 0
+    if XY in coords:
+        count = count + 1
+        print(count)
+        redo = 1
+    while ((x-10)**2) + ((y-10)**2) > 100 or redo:
+        x = random.randint(0,fogdim)
+        y = random.randint(0,fogdim)
+        XY = [x, y]
+        redo = 0
+        if XY in coords:
+            count = count + 1
+            print(count)
+            redo = 1
+
+    coords.append(XY)
+xvals=[]
+for i in range(len(coords)):
+    xvals.append(coords[i][0])
+
+yvals=[]
+for j in range(len(coords)):
+    yvals.append(coords[j][1])
+
+print(xvals)
+print(yvals)
+
+
+
+
+plt.scatter(xvals, yvals, marker='o')
+plt.show()
+# show color scale
+# for i in range(noc):
+#     while ((x-10)**2) + ((y-10)**2) > 100  and  count < 100 and x not in placed:
+#         x = random.randint(0,fogdim)
+#         count = count + 1
+#     placed.append(x)
+#     if count > 99:
+#         print('hello')
+#     print(x,y)
