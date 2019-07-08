@@ -14,6 +14,9 @@ from pprintpp import pprint as pp
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 import matplotlib.pyplot as plt
 
+from itertools import chain
+from collections import Counter
+
 HEADER_COUNT = 80
 TRI_BYTE_COUNT = 4
 DATA_COUNT = 3
@@ -34,7 +37,7 @@ class decoder:
 	@classmethod
 	def readSTL(cls, filename):
 
-		print ("Reading STL File")
+		print ("Reading STL File...")
 		df = open(filename,'rb')
 		header = df.read(80)
 		df.close()
@@ -111,30 +114,7 @@ class decoder:
 		return formExist
 
 	@classmethod
-	def findRotation(cls, modelTag, subjectTag):
-
-		mRows, mVertices = np.where(cls.mem[:,:,3] == modelTag)
-		sRows, sVertices = np.where(cls.mem[:,:,3] == subjectTag)
-
-		# converted to set to remove duplicates, then back to list for indexing
-		mRows = list(set(mRows))
-		sRows = list(set(sRows))
-
-		mV = cls.vertices[mRows[0]]
-
-
-		mTri = cls.triangleArea(mV)
-		pp(mTri)
-
-		for row in range(len(sRows)):
-			sV = cls.vertices[sRows[row]]
-			sTri = cls.triangleArea(sV)
-			pp(sTri)
-			if (sTri == mTri):
-				pp("wooden mouse")
-				pp(row)
-
-
+	def makeForm(cls, modelTag):
 
 		# modelNormals = cls.normals[mRows[1]]
 		# pp(modelNormals)
@@ -146,17 +126,46 @@ class decoder:
 		# find the same triangle on the other sphere using its area
 		# separate function: calculate the diff in angle between the two vectors
 		#
+
+		mRows, mColumns = np.where(cls.mem[:,:,3] == modelTag)
+		mRows = list(set(mRows))
+		mV = np.zeros((len(mRows), 3, 3))
+
+		for i in range(len(mRows)):
+			mV[i] = cls.vertices[mRows[i]]
+
+		mV = np.reshape(mV, (int(mV.size/3), 3))
+
+		points, hits = cls.findPole(mV)
+		
+
+
+		fig = plt.figure()
+		ax = fig.gca(projection='3d')
+		xdata = []
+		ydata = []
+		zdata = []
+		for i in range(points.size-1):
+			xdata.append(points[i][0])
+			ydata.append(points[i][0])
+			zdata.append(points[i][0])
+
+
+
+
+		# cls.findPole(mV)
+
+		# mHits, mHighestHitRows = cls.findPole(mV, mRows)
+
 	@classmethod
-	def triangleArea(cls, vertices):
-		# area = 1/2*(V x W)
-		v1 = vertices[1]-vertices[0]
-		v2 = vertices[2]-vertices[0]
+	def findPole(cls, vertices):
+		hits = 0
 
-		cross = np.cross(v1,v2)
-		mag = np.linalg.norm(cross)
-		area = (0.5)*mag
+		points, hits = np.unique(vertices, return_counts=True, axis=0)
+		return points, hits
+		# pp(hits)
+		# return hits, highestHitRows
 
-		return area
 
 def plotForm(form, fig, ax):
 
@@ -190,14 +199,15 @@ def main():
 	# ax = fig.gca(projection='3d')
 
 	formTag = 0
-
-	for rowloc in range(int(2300)):
+	print("Finding forms...")
+	for rowloc in range(int(2500)):
 		formExist = mesh.checkForm(rowloc)
 		if (formExist == False):
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
 			# plotForm(form, fig, ax)
-	mesh.findRotation(1,2)
+	mesh.makeForm(7)
+	plt.show()
 
 
 
@@ -273,3 +283,15 @@ if __name__ == '__main__':
 	# 	ax.quiver(x,y,z,u,v,w,length=0.01, normalize=True)
 	#
 	# 	plt.show()
+
+	# @classmethod
+	# def triangleArea(cls, vertices):
+	# 	# area = 1/2*(V x W)
+	# 	v1 = vertices[1]-vertices[0]
+	# 	v2 = vertices[2]-vertices[0]
+	#
+	# 	cross = np.cross(v1,v2)
+	# 	mag = np.linalg.norm(cross)
+	# 	area = (0.5)*mag
+	# 	area = round(area,7)
+	# 	return area
