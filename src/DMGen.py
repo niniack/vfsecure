@@ -4,6 +4,9 @@
 from matplotlib.image import imread, imsave
 import numpy as np
 import operator
+import math
+import random
+
 img = imread('barcode.png')
 
 img = img[:,:,0]
@@ -37,9 +40,66 @@ while row < hgt:
     col1 = 0
     col = 0
 
+
+a = np.array(ResizeMTX)
+codedim = a.shape[1]
 factor = 2#input("Fog Factor:")
+fogdim = factor*codedim
+fograd = fogdim/2
+
+offset = math.sqrt(2) * codedim/2
+x = 0
+y = 0
+
+while ((x-codedim)**2)+((y-codedim)**2) > math.sqrt(codedim**2-offset):
+    x = random.randint(0,fogdim)
+    y = random.randint(0,fogdim)
+
+x1=x
+y1=y
+# if x <= codedim - cellsize/2:
+#     x = cellsize * math.ceil(x/cellsize) + cellsize/2
+#     print('c') #less than 8
+#
+# if y <= codedim - cellsize/2:
+#     y = cellsize * math.ceil(y/cellsize) + cellsize/2
+#     print('d') #less than 8
+#
+# if x > codedim - cellsize/2:
+#     x = cellsize * math.floor(x/cellsize) + cellsize/2
+#     print('a')
+#
+# if y > codedim - cellsize/2:
+#     y = cellsize * math.floor(y/cellsize) + cellsize/2
+#     print('b')
+
+print(x,y)
+
+leftbuff = x - codedim/2
+rightbuff = fogdim - leftbuff
+axis=0
+
+pad_size = rightbuff - a.shape[axis]
+axis_nb = len(a.shape)
+if pad_size >= 0:
+    npad = [(0, 0) for x in range(axis_nb)]
+    npad[axis] = (int(leftbuff), int(pad_size))
+    a = np.pad(a, pad_width=npad, mode='constant', constant_values=0)
 
 
-b = np.zeros(10)
+leftbuff = y - codedim/2
+rightbuff = fogdim - leftbuff
+axis=1
 
-print(np.concatenate((ResizeMTX,b), axis = none))
+pad_size = rightbuff - a.shape[axis]
+axis_nb = len(a.shape)
+if pad_size >= 0:
+    npad = [(0, 0) for x in range(axis_nb)]
+    npad[axis] = (int(leftbuff), int(pad_size))
+    b = np.pad(a, pad_width=npad, mode='constant', constant_values=0)
+
+
+print(b,b.shape)
+
+for x in range(fogdim):
+    print(b[5][x])
