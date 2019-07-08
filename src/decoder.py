@@ -134,35 +134,71 @@ class decoder:
 		for i in range(len(mRows)):
 			mV[i] = cls.vertices[mRows[i]]
 
-		mV = np.reshape(mV, (int(mV.size/3), 3))
+		points, hits, poles = cls.findPole(mV)
 
-		points, hits = cls.findPole(mV)
-		
-
-
-		fig = plt.figure()
-		ax = fig.gca(projection='3d')
-		xdata = []
-		ydata = []
-		zdata = []
-		for i in range(points.size-1):
-			xdata.append(points[i][0])
-			ydata.append(points[i][0])
-			zdata.append(points[i][0])
+		pRows, pCols = np.nonzero(np.all(mV == poles[1], axis=2))
+		pRows = list(set(pRows.tolist()))
 
 
 
+		poleFaceLocs = np.zeros(len(pRows))
+		poleFaces = np.zeros((len(pRows), 3, 3))
+		poleFaceNormals = np.zeros((len(pRows),3))
 
-		# cls.findPole(mV)
+		for i in range(len(pRows)):
+			poleFaceLocs[i] = mRows[pRows[i]]
+			poleFaces[i] = cls.vertices[int(poleFaceLocs[i])]
+			poleFaceNormals[i] = cls.normals[int(poleFaceLocs[i])]
 
-		# mHits, mHighestHitRows = cls.findPole(mV, mRows)
+
+
+		poleFaceNormals = poleFaceNormals[np.isfinite(poleFaceNormals)]
+		poleFaceNormals = np.reshape(poleFaceNormals, [int(poleFaceNormals.size/3),3])
+		poleVertexNormal = np.mean(poleFaceNormals, axis=0)
+		pp(poleVertexNormal)
+		# origins = findCircumcenter(poleFaces, 14)
+		# plotNormals(origins, poleFaceNormals, 14)
+
+
+		# fig = plt.figure()
+		# ax = fig.gca(projection='3d')
+
+
+		# xdata = np.zeros(int(points.size/3))
+		# ydata = np.zeros(int(points.size/3))
+		# zdata = np.zeros(int(points.size/3))
+		#
+		#
+		#
+		# for j in range(int(points.size/3)):
+		# 	xdata[j] = points[j][0]
+		# 	ydata[j] = points[j][1]
+		# 	zdata[j] = points[j][2]
+		#
+		#
+		# ax.scatter(xdata, ydata, zdata, c=zdata)
+
 
 	@classmethod
 	def findPole(cls, vertices):
+
+		vertices = np.reshape(vertices, (int(vertices.size/3), 3))
+
 		hits = 0
+		poleLocs = np.zeros(2)
+		poles = np.zeros([2,3])
+
 
 		points, hits = np.unique(vertices, return_counts=True, axis=0)
-		return points, hits
+		poleLocs[0] = hits.argmax()
+		hits[int(poleLocs[0])] = -1;
+		poleLocs[1] = hits.argmax()
+
+
+		poles[0] = points[int(poleLocs[0])]
+		poles[1] = points[int(poleLocs[1])]
+
+		return points, hits, poles
 		# pp(hits)
 		# return hits, highestHitRows
 
@@ -180,6 +216,43 @@ def plotForm(form, fig, ax):
 			zdata.append(form[i][j][2])
 
 	ax.scatter(xdata, ydata, zdata, c=zdata)
+
+def findCircumcenter(vectors,dim):
+
+	triOrigins = np.empty([dim,3])
+
+	for i in range(dim):
+		triOrigins[i][0] = (vectors[i][0][0]+vectors[i][1][0]+vectors[i][2][0])/3
+		triOrigins[i][1] = (vectors[i][0][1]+vectors[i][1][1]+vectors[i][2][1])/3
+		triOrigins[i][2] = (vectors[i][0][2]+vectors[i][1][2]+vectors[i][2][2])/3
+
+	return triOrigins
+
+def plotNormals(origins,normals,dim):
+
+	x = np.empty([dim,1])
+	y = np.empty([dim,1])
+	z = np.empty([dim,1])
+	u = np.empty([dim,1])
+	v = np.empty([dim,1])
+	w = np.empty([dim,1])
+
+	fig = plt.figure()
+	ax = fig.gca(projection='3d')
+
+
+
+	for i in range(dim):
+		x[i] = origins[i][0]
+		y[i] = origins[i][1]
+		z[i] = origins[i][2]
+		u[i] = normals[i][0]
+		v[i] = normals[i][1]
+		w[i] = normals[i][2]
+
+	ax.quiver(x,y,z,u,v,w,length=0.1, normalize=True)
+
+	plt.show()
 
 
 def main():
@@ -200,14 +273,14 @@ def main():
 
 	formTag = 0
 	print("Finding forms...")
-	for rowloc in range(int(2500)):
+	for rowloc in range(int(500)):
 		formExist = mesh.checkForm(rowloc)
 		if (formExist == False):
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
 			# plotForm(form, fig, ax)
-	mesh.makeForm(7)
-	plt.show()
+	mesh.makeForm(3)
+	# plt.show()
 
 
 
