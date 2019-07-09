@@ -44,7 +44,7 @@ while row < hgt:
 
 a = np.array(ResizeMTX)
 codedim = a.shape[1]
-factor = 3#input("Fog Factor:")
+factor = 4#input("Fog Factor:")
 fogdim = factor*codedim
 fograd = fogdim/2
 
@@ -55,26 +55,16 @@ y = 0
 while ((x-(fogdim/2))**2)+((y-fogdim/2)**2) > math.sqrt((fogdim/2)**2-offset):
     x = random.randint(0,fogdim)
     y = random.randint(0,fogdim)
+
 print(x,y)
-x = 15
-y = 15
 
-# if x <= codedim - cellsize/2:
-#     x = cellsize * math.ceil(x/cellsize) + cellsize/2
-#     print('c') #less than 8
-#
-# if y <= codedim - cellsize/2:
-#     y = cellsize * math.ceil(y/cellsize) + cellsize/2
-#     print('d') #less than 8
-#
-# if x > codedim - cellsize/2:
-#     x = cellsize * math.floor(x/cellsize) + cellsize/2
-#     print('a')
-#
-# if y > codedim - cellsize/2:
-#     y = cellsize * math.floor(y/cellsize) + cellsize/2
-#     print('b')
+buff = 1
+dt = []
+for xi in range(int(x-codedim/2)-buff,int(x+codedim-codedim/2)+buff):
+    for yi in range(int(y-codedim/2)-buff,int(y+codedim-codedim/2)+buff):
 
+        XYi = [xi,yi]
+        dt.append(XYi)
 
 leftbuff = x - codedim/2
 rightbuff = fogdim - leftbuff
@@ -99,15 +89,15 @@ if pad_size >= 0:
     npad[axis] = (int(leftbuff), int(pad_size))
     b = np.pad(a, pad_width=npad, mode='constant', constant_values=0)
 
-print(b)
 codecoords = []
 for p in range(fogdim):
     for o in range(fogdim):
         if b[p][o]:
-            XYc = [o,p]
+            XYc = [p,o]
             codecoords.append(XYc)
+
 count = 0
-noc = 200
+noc = math.floor((fograd**2)*3.14)
 coords = []
 redo = 1
 
@@ -118,7 +108,6 @@ for i in range(noc):
     redo = 0
     if XY in coords:
         count = count + 1
-        print(count)
         redo = 1
     while ((x-fogdim/2)**2) + ((y-fogdim/2)**2) > (fogdim/2)**2 or redo:
         x = random.randint(0,fogdim)
@@ -127,28 +116,9 @@ for i in range(noc):
         redo = 0
         if XY in coords:
             count = count + 1
-            print(count)
             redo = 1
 
     coords.append(XY)
-
-
-
-
-dt = []
-
-for xi in range(int(x-codedim/2),int(x+codedim-codedim/2)):
-    for yi in range(int(y-codedim/2),int(y+codedim-codedim/2)):
-
-        XYi = [xi,yi]
-        dt.append(XYi)
-
-#print(b,b.shape)
-density = 0.5
-placed = []
-count = 1
-#for y in range(1,fogdim):
-
 
 for c in range(len(dt)):
     if dt[c] in coords:
@@ -156,7 +126,15 @@ for c in range(len(dt)):
 
 coords = coords + codecoords
 
-print(coords)
+
+
+
+
+
+
+
+
+
 
 xvals = []
 for i in range(len(coords)):
@@ -166,5 +144,5 @@ yvals = []
 for j in range(len(coords)):
     yvals.append(coords[j][1])
 
-plt.scatter(xvals, yvals, marker='o')
+plt.scatter(xvals, yvals, marker='s')
 plt.show()
