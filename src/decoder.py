@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import math
 import struct
 import sys
 import numpy as np
@@ -158,9 +159,11 @@ class decoder:
 
 
 
+
 		poleFaceNormals = poleFaceNormals[np.isfinite(poleFaceNormals)]
 		poleFaceNormals = np.reshape(poleFaceNormals, [int(poleFaceNormals.size/3),3])
 		poleVertexNormal = np.mean(poleFaceNormals, axis=0)
+
 		return(poleVertexNormal)
 
 		# origins = findCircumcenter(poleFaces, 14)
@@ -201,13 +204,69 @@ class decoder:
 		hits[int(poleLocs[0])] = -1;
 		poleLocs[1] = hits.argmax()
 
-
 		poles[0] = points[int(poleLocs[0])]
 		poles[1] = points[int(poleLocs[1])]
 
 		return poles
 		# pp(hits)
 		# return hits, highestHitRows
+
+	@classmethod
+	def findAngleDiff(cls, model, subject):
+
+		# keep the other pole at hand, incase it is needed to switch
+		nsubject = -subject
+
+		# # rho value for spherical coordiantes
+		# mRho = np.linalg.norm(model)
+		# sRho = np.linalg.norm(subject)
+
+		# Phi value of vectors (angle from the positive z-axis)
+		# Use this value to determine which is the "correct" pole
+
+		mPhi = np.rad2deg(np.arctan2(math.sqrt(math.pow(model[0],2)+math.pow(model[1],2)),model[2]))
+		sPhi = np.rad2deg(np.arctan2(math.sqrt(math.pow(subject[0],2)+math.pow(subject[1],2)),subject[2]))
+		nsPhi = np.rad2deg(np.arctan2(math.sqrt(math.pow(nsubject[0],2)+math.pow(nsubject[1],2)),nsubject[2]))
+
+		# Theta value of vectors (angle from the positive x-axis)
+		mTheta = np.rad2deg(np.arctan2(model[1], model[0]))
+		sTheta = np.rad2deg(np.arctan2(subject[1], subject[0]))
+		nsTheta = np.rad2deg(np.arctan2(nsubject[1], nsubject[0]))
+
+
+		# The smaller of the two phi differences is for the "correct" pole
+		diffPhi1 = abs(mPhi - sPhi)
+		diffPhi2 = abs(mPhi - nsPhi)
+
+		if (diffPhi1 > diffPhi2):
+			rotPhi = diffPhi2
+			rotTheta = abs(mTheta-nsTheta)
+
+		else:
+			rotPhi = diffPhi1
+			rotTheta = abs(mTheta-sTheta)
+
+		return rotPhi, rotTheta
+
+
+
+
+
+
+
+		# diffTheta = mTheta-nsTheta
+		# diffPhi = mPhi - sPhi
+		#
+		# pp('mtheta' + str(mTheta))
+		# pp('stheta' + str(nsTheta))
+		# pp('difference in  theta:'+str(diffTheta))
+		#
+		# pp('mphi' + str(mPhi))
+		# pp('sphi' + str(sPhi))
+		# pp('difference in  phi:'+str(diffPhi))
+		#
+		#
+		#
 
 
 
@@ -224,6 +283,9 @@ def plotForm(form, fig, ax):
 			zdata.append(form[i][j][2])
 
 	ax.scatter(xdata, ydata, zdata, c=zdata)
+
+
+
 
 def main():
 
@@ -249,7 +311,14 @@ def main():
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
 			# plotForm(form, fig, ax)
-	mesh.findPoleNormal(3)
+	model = mesh.findPoleNormal(1)
+	subject = mesh.findPoleNormal(5)
+
+	pp(model)
+	pp(subject)
+	rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
+	pp(rotPhi)
+	pp(rotTheta)
 	# plt.show()
 
 
