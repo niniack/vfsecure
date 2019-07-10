@@ -31,6 +31,7 @@ class decoder:
 	filename=None
 	normals=None
 	vertices=None
+	mem=None
 	attrs=None
 	size=None
 	numForms=0
@@ -113,6 +114,44 @@ class decoder:
 			formExist = False
 
 		return formExist
+
+	@classmethod
+	def extractForm(cls, tag):
+		rows, cols = np.where(cls.mem[:,:,3] == tag)
+		rows = list(set(rows.tolist()))
+
+		# BINARY FORMAT
+
+		# UINT8[80] – Header
+        # UINT32 – Number of triangles
+        #
+        #
+        # foreach triangle
+        # REAL32[3] – Normal vector
+        # REAL32[3] – Vertex 1
+        # REAL32[3] – Vertex 2
+        # REAL32[3] – Vertex 3
+        # UINT16 – Attribute byte count
+        # end
+
+		wf = open('out.stl', 'wb+')
+		wf.write(_b("\0"*80))
+
+		wf.write(_b(np.uint32(len(rows))))
+
+		pp(str(np.float32(cls.vertices[rows[0]][0][1])))
+		for i in range(int(len(rows))):
+			wf.write(_b(np.float32(cls.normals[rows[i]][0])))
+			wf.write(_b(np.float32(cls.normals[rows[i]][1])))
+			wf.write(_b(np.float32(cls.normals[rows[i]][2])))
+			for j in range(3):
+				wf.write(_b(np.float32(cls.vertices[rows[i]][j][0])))
+				wf.write(_b(np.float32(cls.vertices[rows[i]][j][1])))
+				wf.write(_b(np.float32(cls.vertices[rows[i]][j][2])))
+
+			wf.write(_b(np.uint16(0)))
+
+		wf.close()
 
 	@classmethod
 	def findPoleNormal(cls, modelTag):
@@ -248,28 +287,6 @@ class decoder:
 
 		return rotPhi, rotTheta
 
-
-
-
-
-
-
-		# diffTheta = mTheta-nsTheta
-		# diffPhi = mPhi - sPhi
-		#
-		# pp('mtheta' + str(mTheta))
-		# pp('stheta' + str(nsTheta))
-		# pp('difference in  theta:'+str(diffTheta))
-		#
-		# pp('mphi' + str(mPhi))
-		# pp('sphi' + str(sPhi))
-		# pp('difference in  phi:'+str(diffPhi))
-		#
-		#
-		#
-
-
-
 def plotForm(form, fig, ax):
 
 	xdata = []
@@ -284,8 +301,11 @@ def plotForm(form, fig, ax):
 
 	ax.scatter(xdata, ydata, zdata, c=zdata)
 
-
-
+def _b(s, encoding='ascii', errors='replace'):
+	if isinstance(s, str):
+		return bytes(s, encoding, errors)
+	else:
+		return s
 
 def main():
 
@@ -305,24 +325,28 @@ def main():
 
 	formTag = 0
 	print("Finding forms...")
-	for rowloc in range(int(500)):
+	for rowloc in range(int(mesh.numTriangles)): #mesh.numTriangles
 		formExist = mesh.checkForm(rowloc)
 		if (formExist == False):
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
+		if(mesh.numForms > 20):
+			break
 			# plotForm(form, fig, ax)
-	model = mesh.findPoleNormal(1)
-	subject = mesh.findPoleNormal(5)
+	mesh.extractForm(20)
 
-	pp(model)
-	pp(subject)
-	rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
-	pp(rotPhi)
-	pp(rotTheta)
+
+
+	########## DON'T DELETE ##################
+	# model = mesh.findPoleNormal(1)
+	# subject = mesh.findPoleNormal(5)
+	#
+	# rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
+	##########################################
+
+
+
 	# plt.show()
-
-
-
 
 	# origins = findCircumcenter(mesh.vectors, int(mesh.numTriangles))
 	# plotNormals(origins, normals, int(mesh.numTriangles))
