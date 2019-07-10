@@ -6,6 +6,7 @@ import numpy as np
 import operator
 import math
 import random
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
 img = imread('barcode.png')
@@ -44,7 +45,7 @@ while row < hgt:
 
 a = np.array(ResizeMTX)
 codedim = a.shape[1]
-factor = 4#input("Fog Factor:")
+factor = 1.5#input("Fog Factor:")
 fogdim = factor*codedim
 fograd = fogdim/2
 
@@ -58,7 +59,7 @@ while ((x-(fogdim/2))**2)+((y-fogdim/2)**2) > math.sqrt((fogdim/2)**2-offset):
 
 print(x,y)
 
-buff = 1
+buff = 0
 dt = []
 for xi in range(int(x-codedim/2)-buff,int(x+codedim-codedim/2)+buff):
     for yi in range(int(y-codedim/2)-buff,int(y+codedim-codedim/2)+buff):
@@ -90,14 +91,15 @@ if pad_size >= 0:
     b = np.pad(a, pad_width=npad, mode='constant', constant_values=0)
 
 codecoords = []
-for p in range(fogdim):
-    for o in range(fogdim):
+for p in math.ceil(range(fogdim)):
+    for o in math.ceil(range(fogdim)):
         if b[p][o]:
             XYc = [p,o]
             codecoords.append(XYc)
 
 count = 0
-noc = math.floor((fograd**2)*3.14)
+density = 0.5
+noc =  math.floor(density *(fograd**2)*3.14)
 coords = []
 redo = 1
 
@@ -129,10 +131,16 @@ coords = coords + codecoords
 
 
 
+for t in range(len(coords)):
+    x = coords[t][0]
+    y = coords[t][1]
+    z = random.randint(0,fogdim)
+    while ((x-fogdim/2)**2) + ((y-fogdim/2)**2) + ((z-fogdim/2)**2) > (fogdim/2)**2:
+        z = random.randint(0,fogdim)
+    coords[t].append(z)
 
 
-
-
+print(coords)
 
 
 
@@ -144,5 +152,17 @@ yvals = []
 for j in range(len(coords)):
     yvals.append(coords[j][1])
 
-plt.scatter(xvals, yvals, marker='s')
+zvals = []
+for k in range(len(coords)):
+    zvals.append(coords[k][2])
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+ax.scatter(xvals, yvals, zvals, c='r', marker='o')
+
 plt.show()
+
+print(len(coords))
+#plt.scatter(xvals, yvals, zvals, marker='s')
+#plt.show()
