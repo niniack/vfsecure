@@ -10,6 +10,7 @@ import struct
 import sys
 import numpy as np
 from stl import mesh
+from utils import _b
 from pprintpp import pprint as pp
 
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
@@ -139,7 +140,6 @@ class decoder:
 
 		wf.write(_b(np.uint32(len(rows))))
 
-		pp(str(np.float32(cls.vertices[rows[0]][0][1])))
 		for i in range(int(len(rows))):
 			wf.write(_b(np.float32(cls.normals[rows[i]][0])))
 			wf.write(_b(np.float32(cls.normals[rows[i]][1])))
@@ -287,12 +287,6 @@ def plotForm(form, fig, ax):
 			zdata.append(form[i][j][2])
 
 	ax.scatter(xdata, ydata, zdata, c=zdata)
-
-def _b(s, encoding='ascii', errors='replace'):
-	if isinstance(s, str):
-		return bytes(s, encoding, errors)
-	else:
-		return s
 
 def main():
 
