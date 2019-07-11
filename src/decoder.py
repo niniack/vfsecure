@@ -156,19 +156,6 @@ class decoder:
 	@classmethod
 	def findPoleNormal(cls, modelTag):
 
-		# modelNormals = cls.normals[mRows[1]]
-		# pp(modelNormals)
-
-
-		# choose a reference sphere
-		# select a sphere to compare with
-		# choose a triangle on the reference sphere
-		# find the same triangle on the other sphere using its area
-		# separate function: calculate the diff in angle between the two vectors
-		#
-
-
-
 		mRows, mColumns = np.where(cls.mem[:,:,3] == modelTag)
 		mRows = list(set(mRows))
 		mV = np.zeros((len(mRows), 3, 3))
@@ -357,7 +344,7 @@ if __name__ == '__main__':
 
 
 
-##### LEGACY #####
+##### LEGACY ##### Useful to fish from sometimes
 
 	# @classmethod
 	# def findOpposites(cls):
