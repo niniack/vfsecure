@@ -144,6 +144,11 @@ class decoder:
 			wf.write(_b(np.float32(cls.normals[rows[i]][0])))
 			wf.write(_b(np.float32(cls.normals[rows[i]][1])))
 			wf.write(_b(np.float32(cls.normals[rows[i]][2])))
+
+			# print('[{0},{1},{2}]'.format(np.float32(cls.normals[rows[i]][0]),
+			# np.float32(cls.normals[rows[i]][1]),
+			# np.float32(cls.normals[rows[i]][2])))
+
 			for j in range(3):
 				wf.write(_b(np.float32(cls.vertices[rows[i]][j][0])))
 				wf.write(_b(np.float32(cls.vertices[rows[i]][j][1])))
@@ -311,10 +316,10 @@ def main():
 		if (formExist == False):
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
-		if(mesh.numForms > 20):
+		if(mesh.numForms > 2):
 			break
 			# plotForm(form, fig, ax)
-	mesh.extractForm(20)
+	mesh.extractForm(2)
 
 
 
