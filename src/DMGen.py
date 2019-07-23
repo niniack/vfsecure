@@ -15,7 +15,8 @@ from pylibdmtx.pylibdmtx import encode
 key = 1213
 hash = "25210c83610ebca1a059c0bae8255eba2f95be4d1d7bcfa89d7248a82d9f111"
 
-img = imread('../images/barcode.png')
+img = imread('../images/barcode3.png')
+
 
 img = img[:,:,0]
 hgt = len(img)
@@ -146,10 +147,25 @@ def Sort(sub_li):
     sub_li.sort(key = lambda x: (x[0], x[1]))
     return sub_li
 
+xvals = []
+yvals = []
+zvals = []
+for i in range(len(coords)):
+    xvals.append(coords[i][0])
+    yvals.append(coords[i][1])
+    zvals.append(coords[i][2])
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(xvals, yvals, zvals, c='r', marker='o')
+plt.show()
+
 Sort(coords)
 tf = open('Origins.txt', 'w+')
 tf.write(str(coords))
 tf.close()
+
+
 #np.savetxt('origins.txt', coords, delimiter = ',')
 ##encode
 
@@ -191,18 +207,7 @@ for x in range(1,32+1):
 
 
 
-#xvals = []
-#yvals = []
-#zvals = []
-#for i in range(len(coords)):
-#    xvals.append(coords[i][0])
-#    yvals.append(coords[i][1])
-#    zvals.append(coords[i][2])
 
-#fig = plt.figure()
-#ax = fig.add_subplot(111, projection='3d')
-#ax.scatter(xvals, yvals, zvals, c='r', marker='o')
-#plt.show()
 
 #plt.scatter(xvals, yvals, zvals, marker='s')
 #plt.show()
