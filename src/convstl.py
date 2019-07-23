@@ -4,6 +4,7 @@
 
 import argparse
 import os
+import sys
 import numpy as np
 
 
@@ -23,6 +24,8 @@ class convert:
 
         else:
         	return("binary")
+    # @classmethod
+    # def conv2binary(cls, filename, **kwargs):
 
     @classmethod
     def conv2ascii(cls, filename, **kwargs):
