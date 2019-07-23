@@ -18,7 +18,8 @@ from utils import _b
 
 
 class generator:
-
+    key = 1210
+    hash = "25210c83610ebca1a059c0bae8255eba2f95be4d1d7bcfa89d7248a82d9f111"
     ResizeMTX = None
     fogdim = None
     coords = None
@@ -192,6 +193,55 @@ class generator:
         ax.scatter(xvals, yvals, zvals, c='r', marker='o')
         plt.show()
 
+    @classmethod
+    def genRotVal(cls):
+
+        def truncate(f, n):
+            '''Truncates/pads a float f to n decimal places without rounding'''
+            s = '{}'.format(f)
+            if 'e' in s or 'E' in s:
+                return '{0:.{1}f}'.format(f, n)
+            i, p, d = s.partition('.')
+            return '.'.join([i, (d+'0'*n)[:n]])
+        rotates = []
+        for a in range(len(cls.coords)):
+            rot1 = 360*random.random()
+            rot2 = 360*random.random()
+            rot1 = truncate(rot1, 5)
+            rot2 = truncate(rot2, 5)
+            rotates.append([rot1, rot2])
+
+
+        model = int(str(cls.key)[:2])
+        print(model)
+        multi = int(str(cls.key)[2:4])
+
+        mr1 = 360*random.random()
+        mr2 = 360*random.random()
+
+        posvec = []
+        extra = 0
+        for x in range(1,32):
+            digits = cls.hash[2*(x-1):2*x]
+            rot1 = (mr1 + (int(digits[0], 16) * 180/16 - random.random() * 180/16)) % 360
+            rot2 = (mr2 + (int(digits[1], 16) * 180/16 - random.random() * 180/16)) % 360
+            rot1 = truncate(rot1, 5)
+            rot2 = truncate(rot2, 5)
+            cell = ((multi)*x) - 1 - extra
+            pos = cell % len(cls.coords)
+            print(posvec)
+            while pos in posvec:
+                extra = extra + 1
+                pos = ((multi)*x) - 1 + extra
+                print('WARNING')
+            posvec.append(pos)
+
+            rotates[pos][0] = rot1
+            rotates[pos][1] = rot2
+
+        print(posvec)
+        print(len(posvec))
+        #print(np.array(rotates))
 
 def main():
     mesh = generator()
@@ -200,9 +250,7 @@ def main():
     mesh.FOGxy()
     mesh.assignZ()
     print(len(mesh.coords))
-    mesh.displayresults()
-
-
+    mesh.genRotVal()
 
 
 if __name__ == '__main__':
