@@ -1,5 +1,6 @@
 from pprintpp import pprint as pp
 import numpy as np
+import math
 
 from utils import _b
 
@@ -10,7 +11,10 @@ class generator:
     vertices=None;
     origins=None;
     normals=None;
-    shiftedSpheres=None;
+    shiftedVertices=None;
+    numFaces=None;
+    numVertices=None;
+
 
 
     @classmethod
@@ -30,6 +34,9 @@ class generator:
         # convert from MATLAB indexing to Python indexing by subtracting 1
         cls.faces = np.subtract(cls.faces,1)
 
+        cls.numFaces = np.size(cls.faces,0)
+        cls.numVertices = np.size(cls.vertices,0)
+
 
     @classmethod
     def shift(cls, index):
@@ -47,28 +54,34 @@ class generator:
 
             cls.normals[(numFaces*index)+i]=np.cross(vec1, vec2)
 
+        for i in range(cls.numVertices):
+            cls.shiftedVertices[(cls.numVertices*index)+i]=shifted[i]
+
     @classmethod
     def writeSTL(cls):
 
-        numOrigins = np.size(cls.origins,0)
-        numFaces = np.size(cls.faces,0)
+        numSpheres = np.size(cls.origins,0)
 
-        #normalizing normals(?)
+        #normalizing normals
         cls.normals =  cls.normals*(1/np.sqrt(np.add(cls.normals*cls.normals,1)))
 
         wf = open('sphere.stl', 'wb+')
         wf.write(_b("\0"*80))
 
-        wf.write(_b(np.uint32(int(numFaces))))
+        wf.write(_b(np.uint32(cls.numFaces*numSpheres)))
 
-        for i in range(int(numFaces)):
+        for i in range(cls.numFaces*numSpheres):
             wf.write(_b(np.float32(cls.normals[i][0])))
             wf.write(_b(np.float32(cls.normals[i][1])))
             wf.write(_b(np.float32(cls.normals[i][2])))
             for j in range(3):
-                wf.write(_b(np.float32(cls.vertices[int(cls.faces[i][j])][0])))
-                wf.write(_b(np.float32(cls.vertices[int(cls.faces[i][j])][1])))
-                wf.write(_b(np.float32(cls.vertices[int(cls.faces[i][j])][2])))
+
+                sphereNum = math.floor(i/cls.numFaces)
+                indicesFromSphereZero = cls.numFaces*sphereNum
+
+                wf.write(_b(np.float32(cls.shiftedVertices[ cls.faces[i-indicesFromSphereZero][j]+(cls.numVertices*sphereNum) ][0])))
+                wf.write(_b(np.float32(cls.shiftedVertices[ cls.faces[i-indicesFromSphereZero][j]+(cls.numVertices*sphereNum) ][1])))
+                wf.write(_b(np.float32(cls.shiftedVertices[ cls.faces[i-indicesFromSphereZero][j]+(cls.numVertices*sphereNum) ][2])))
 
             wf.write(_b(np.uint16(0)))
 
@@ -79,18 +92,22 @@ def main():
     mesh = generator()
     generator.readData()
 
-
+    ######## these will be replaced #######
     generator.origins = np.loadtxt('../sphere/origins.txt',delimiter=',')
     numSpheres = np.size(generator.origins,0)
-    numFaces = np.size(generator.faces,0)
-    generator.normals = np.zeros([numFaces*numSpheres,3])
+    #######################################
+
+    generator.normals = np.zeros([generator.numFaces*numSpheres,3])
+    generator.shiftedVertices = np.zeros([generator.numVertices*numSpheres,3])
 
 
     # for i in range(numSpheres):
     #     generator.shift(i)
 
-    generator.shift(0)
+    for i in range(numSpheres):
+        generator.shift(i)
 
+    pp(generator.shiftedVertices)
     generator.writeSTL()
 
 
