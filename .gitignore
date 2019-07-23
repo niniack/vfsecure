@@ -3,3 +3,5 @@ test.py
 out.stl
 trial.stl
 sphere.stl
+.DS_Store
+.__pycache__
