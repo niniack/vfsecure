@@ -15,7 +15,7 @@ from pylibdmtx.pylibdmtx import encode
 key = 1213
 hash = "25210c83610ebca1a059c0bae8255eba2f95be4d1d7bcfa89d7248a82d9f111"
 
-img = imread('barcode.png')
+img = imread('../images/barcode.png')
 
 img = img[:,:,0]
 hgt = len(img)
@@ -188,7 +188,6 @@ for x in range(1,32+1):
     coords[pos] = [coords[pos] , rot1, rot2]
     print(coords[pos])
     print(len(posvec))
-
 
 
 
