@@ -15,7 +15,7 @@ from pylibdmtx.pylibdmtx import encode
 key = 1213
 hash = "25210c83610ebca1a059c0bae8255eba2f95be4d1d7bcfa89d7248a82d9f111"
 
-img = imread('../images/barcode3.png')
+img = imread('../images/barcode.png')
 
 
 img = img[:,:,0]
@@ -128,6 +128,14 @@ for c in range(len(dt)):
     if dt[c] in coords:
         coords.remove(dt[c])
 
+
+xvals = []
+yvals = []
+zvals = []
+for i in range(len(coords)):
+    xvals.append(coords[i][0])
+    yvals.append(coords[i][1])
+    
 coords = coords + codecoords
 
 count = 0
@@ -147,13 +155,7 @@ def Sort(sub_li):
     sub_li.sort(key = lambda x: (x[0], x[1]))
     return sub_li
 
-xvals = []
-yvals = []
-zvals = []
-for i in range(len(coords)):
-    xvals.append(coords[i][0])
-    yvals.append(coords[i][1])
-    zvals.append(coords[i][2])
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')

@@ -19,10 +19,15 @@ from utils import _b
 
 class generator:
 
+    ResizeMTX = None
+    fogdim = None
+    coords = None
+    dt = None
+
     @classmethod
     def readMatrix(cls):
         # read image
-        img = imread('../images/barcode3.png')
+        img = imread('../images/barcode.png')
         # takes data from one of the RGB channels
         img = img[:,:,0]
         # measure height of the matrix
@@ -47,7 +52,7 @@ class generator:
         row1 = 0
         col1 = 0
         Resizerow = []
-        ResizeMTX = []
+        cls.ResizeMTX = []
 
         # reading data matrix image
         while row < hgt:
@@ -57,21 +62,147 @@ class generator:
                 col = col + cellsize
                 col1 = col1 + 1
 
-            ResizeMTX.append(Resizerow)
+            cls.ResizeMTX.append(Resizerow)
             Resizerow = []
             row = row + cellsize
             row1 = row1 + 1
             col1 = 0
             col = 0
 
+    @classmethod
+    def codexy(cls):
+        cls.ResizeMTX
+
+        a = np.array(cls.ResizeMTX)
+        codedim = a.shape[1]
+        factor = 2#input("Fog Factor:")
+        cls.fogdim = math.ceil(factor*codedim)
+
+        offset = math.sqrt(2) * codedim/2
+        x = 0
+        y = 0
+
+        while ((x-(cls.fogdim/2))**2)+((y-cls.fogdim/2)**2) > math.sqrt((cls.fogdim/2)**2-offset):
+            x = random.randint(0,cls.fogdim)
+            y = random.randint(0,cls.fogdim)
+
+        buff = 1
+
+        cls.dt = []
+        for xi in range(int(x-codedim/2)-buff,int(x+codedim-codedim/2)+buff):
+            for yi in range(int(y-codedim/2)-buff,int(y+codedim-codedim/2)+buff):
+                XYi = [xi,yi]
+                cls.dt.append(XYi)
+
+        leftbuff = x - codedim/2
+        rightbuff = cls.fogdim - leftbuff
+        axis = 0
+
+        pad_size = rightbuff - a.shape[axis]
+        axis_nb = len(a.shape)
+        if pad_size >= 0:
+            npad = [(0, 0) for x in range(axis_nb)]
+            npad[axis] = (int(leftbuff), int(pad_size))
+            a = np.pad(a, pad_width=npad, mode='constant', constant_values=0)
+
+        leftbuff = y - codedim/2
+        rightbuff = cls.fogdim - leftbuff
+        axis = 1
+
+        pad_size = rightbuff - a.shape[axis]
+        axis_nb = len(a.shape)
+        if pad_size >= 0:
+            npad = [(0, 0) for x in range(axis_nb)]
+            npad[axis] = (int(leftbuff), int(pad_size))
+            b = np.pad(a, pad_width=npad, mode='constant', constant_values=0)
+
+        cls.codecoords = []
+        for p in range(cls.fogdim):
+            for o in range(cls.fogdim):
+                if b[p][o]:
+                    XYc = [p,o]
+                    cls.codecoords.append(XYc)
 
     @classmethod
-    def generateFOG(cls):
+    def FOGxy(cls):
+        cls.fogdim
+        count = 0
+        density = 0.5
+        noc =  math.floor(density *((cls.fogdim/2)**2)*3.14)
+        cls.coords = []
+        redo = 1
+
+        for i in range(noc):
+            x = random.randint(0,cls.fogdim)
+            y = random.randint(0,cls.fogdim)
+            XY = [x,y]
+            redo = 0
+            if XY in cls.coords:
+                count = count + 1
+                redo = 1
+            while ((x-cls.fogdim/2)**2) + ((y-cls.fogdim/2)**2) > (cls.fogdim/2)**2 or redo:
+                x = random.randint(0,cls.fogdim)
+                y = random.randint(0,cls.fogdim)
+                XY = [x, y]
+                redo = 0
+                if XY in cls.coords:
+                    count = count + 1
+                    redo = 1
+
+            cls.coords.append(XY)
+
+        for c in range(len(cls.dt)):
+            if cls.dt[c] in cls.coords:
+                cls.coords.remove(cls.dt[c])
+
+        cls.coords = cls.coords + cls.codecoords
+
+    @classmethod
+    def assignZ(cls):
+        cls.coords
+        count = 0
+
+        for t in range(len(cls.coords)):
+            x = cls.coords[t][0]
+            y = cls.coords[t][1]
+            z = random.randint(0,cls.fogdim)
+
+            while ((x-cls.fogdim/2)**2) + ((y-cls.fogdim/2)**2) + ((z-cls.fogdim/2)**2) > (cls.fogdim/2)**2 and count < 10000:
+                count = count + 1
+                z = random.randint(0,cls.fogdim)
+            count = 0
+            cls.coords[t].append(z)
+
+        def Sort(sub_li):
+            sub_li.sort(key = lambda x: (x[0], x[1]))
+            return sub_li
+
+    @classmethod
+    def displayresults(cls):
+        xvals = []
+        yvals = []
+        zvals = []
+        for i in range(len(cls.coords)):
+            xvals.append(cls.coords[i][0])
+            yvals.append(cls.coords[i][1])
+            zvals.append(cls.coords[i][2])
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(xvals, yvals, zvals, c='r', marker='o')
+        plt.show()
 
 
 def main():
     mesh = generator()
     mesh.readMatrix()
+    mesh.codexy()
+    mesh.FOGxy()
+    mesh.assignZ()
+    print(len(mesh.coords))
+    mesh.displayresults()
+
+
 
 
 if __name__ == '__main__':
