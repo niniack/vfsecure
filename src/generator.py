@@ -19,7 +19,8 @@ from utils import _b
 
 class generator:
     key = '0205'
-    hash = "25210c83610ebca1a059c0bae8255eba2f95be4d1d7bcfa89d7248a82d9f111"
+    hash = "beefe1dddd1f8ecc33e5b8f0b0a0ae737eff02a71b39c4c5ef4ebae8b794089b"
+    print(len(hash))
     ResizeMTX = None
     fogdim = None
     coords = None
@@ -72,7 +73,7 @@ class generator:
             col = 0
 
     @classmethod
-    def codexy(cls):
+    def CODExy(cls):
         cls.ResizeMTX
 
         a = np.array(cls.ResizeMTX)
@@ -209,66 +210,71 @@ class generator:
         for a in range(len(cls.coords)):
             rot1 = 360*random.random()
             rot2 = 360*random.random()
-            rot1 = truncate(rot1, 5)
-            rot2 = truncate(rot2, 5)
-            rot1 = float(rot1)
-            rot2 = float(rot2)
+            rot1 = float(truncate(rot1, 5))
+            rot2 = float(truncate(rot2, 5))
             cls.rotates.append([rot1, rot2])
-
 
         model = int(str(cls.key)[:2])
         model = 3
-        print(model)
         multi = int(str(cls.key)[2:4])
         multi = 1
-        print(multi)
 
         mr1 = 360*random.random()
         mr2 = 360*random.random()
+        mr1 = float(truncate(mr1, 5))
+        mr2 = float(truncate(mr2, 5))
 
         posvec = []
         extra = 0
-        for x in range(1,32):
+        for x in range(1,33):
             digits = cls.hash[2*(x-1):2*x]
             rot1 = (mr1 + (int(digits[0], 16) * 180/16 - random.random() * 180/16)) % 360
             rot2 = (mr2 + (int(digits[1], 16) * 180/16 - random.random() * 180/16)) % 360
-            rot1 = truncate(rot1, 5)
-            rot2 = truncate(rot2, 5)
-            rot1 = float(rot1)
-            rot2 = float(rot2)
+            rot1 = float(truncate(rot1, 5))
+            rot2 = float(truncate(rot2, 5))
             cell = ((multi)*x) - 1 - extra
             pos = cell % len(cls.coords)
             while pos in posvec:
                 extra = extra + 1
                 cell = ((multi)*x) - 1 + extra
                 pos = cell % len(cls.coords)
-                print('WARNING')
 
             posvec.append(pos)
             cls.rotates[pos][0] = rot1
             cls.rotates[pos][1] = rot2
+            print(x)
 
-        print(posvec)
-        #print(np.array(rotates))
+        if model in posvec:
+            x = 33
+            cell = ((multi)*x) - 1 + extra
+            pos = cell % len(cls.coords)
+            print(cls.rotates[pos])
+            cls.rotates[pos][0] = cls.rotates[model-1][1]
+            print(cls.rotates[pos])
+
+        cls.rotates[model-1][0] = mr1
+        cls.rotates[model-1][1] = mr2
 
 def main():
     mesh = generator()
     mesh.readMatrix()
-    mesh.codexy()
+    mesh.CODExy()
     mesh.FOGxy()
     mesh.assignZ()
     print(len(mesh.coords))
     mesh.genRotVal()
-    co = np.array(mesh.coords)
-    print(co)
-    ro = np.array(mesh.rotates)
-    print(ro)
-    with open('../sphere/Origins.txt','w+') as f:
-        np.savetxt(f, co)
-        f.close()
-    with open('../sphere/Angles.txt','w+') as ff:
-        np.savetxt(ff, ro)
-        ff.close()
+
+
+    # co = np.array(mesh.coords)
+    # print(co)
+    #print(np.array(mesh.rotates))
+    # print(ro)
+    # with open('../sphere/Origins.txt','w+') as f:
+    #     np.savetxt(f, co)
+    #     f.close()
+    # with open('../sphere/Angles.txt','w+') as ff:
+    #     np.savetxt(ff, ro)
+    #     ff.close()
 
 if __name__ == '__main__':
     main()
