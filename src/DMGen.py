@@ -14,7 +14,6 @@ from pylibdmtx.pylibdmtx import encode
 
 key = 1213
 hash = "25210c83610ebca1a059c0bae8255eba2f95be4d1d7bcfa89d7248a82d9f111"
-
 img = imread('../images/barcode.png')
 
 
@@ -58,6 +57,7 @@ fograd = fogdim/2
 offset = math.sqrt(2) * codedim/2
 x = 0
 y = 0
+
 while ((x-(fogdim/2))**2)+((y-fogdim/2)**2) > math.sqrt((fogdim/2)**2-offset):
     x = random.randint(0,fogdim)
     y = random.randint(0,fogdim)
@@ -128,14 +128,6 @@ for c in range(len(dt)):
     if dt[c] in coords:
         coords.remove(dt[c])
 
-
-xvals = []
-yvals = []
-zvals = []
-for i in range(len(coords)):
-    xvals.append(coords[i][0])
-    yvals.append(coords[i][1])
-    
 coords = coords + codecoords
 
 count = 0
@@ -155,7 +147,13 @@ def Sort(sub_li):
     sub_li.sort(key = lambda x: (x[0], x[1]))
     return sub_li
 
-
+xvals = []
+yvals = []
+zvals = []
+for i in range(len(coords)):
+    xvals.append(coords[i][0])
+    yvals.append(coords[i][1])
+    zvals.append(coords[i][2])
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -167,17 +165,14 @@ tf = open('Origins.txt', 'w+')
 tf.write(str(coords))
 tf.close()
 
-
 #np.savetxt('origins.txt', coords, delimiter = ',')
 ##encode
 
 model = int(str(key)[:2])
 multi = int(str(key)[2:4])
 
-
 mr1 = 360*random.random()
 mr2 = 360*random.random()
-
 
 def truncate(f, n):
     '''Truncates/pads a float f to n decimal places without rounding'''

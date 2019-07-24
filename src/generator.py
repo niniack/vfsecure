@@ -18,11 +18,12 @@ from utils import _b
 
 
 class generator:
-    key = 1210
+    key = '0205'
     hash = "25210c83610ebca1a059c0bae8255eba2f95be4d1d7bcfa89d7248a82d9f111"
     ResizeMTX = None
     fogdim = None
     coords = None
+    rotates = None
     dt = None
 
     @classmethod
@@ -203,18 +204,24 @@ class generator:
                 return '{0:.{1}f}'.format(f, n)
             i, p, d = s.partition('.')
             return '.'.join([i, (d+'0'*n)[:n]])
-        rotates = []
+
+        cls.rotates = []
         for a in range(len(cls.coords)):
             rot1 = 360*random.random()
             rot2 = 360*random.random()
             rot1 = truncate(rot1, 5)
             rot2 = truncate(rot2, 5)
-            rotates.append([rot1, rot2])
+            rot1 = float(rot1)
+            rot2 = float(rot2)
+            cls.rotates.append([rot1, rot2])
 
 
         model = int(str(cls.key)[:2])
+        model = 3
         print(model)
         multi = int(str(cls.key)[2:4])
+        multi = 1
+        print(multi)
 
         mr1 = 360*random.random()
         mr2 = 360*random.random()
@@ -227,20 +234,21 @@ class generator:
             rot2 = (mr2 + (int(digits[1], 16) * 180/16 - random.random() * 180/16)) % 360
             rot1 = truncate(rot1, 5)
             rot2 = truncate(rot2, 5)
+            rot1 = float(rot1)
+            rot2 = float(rot2)
             cell = ((multi)*x) - 1 - extra
             pos = cell % len(cls.coords)
-            print(posvec)
             while pos in posvec:
                 extra = extra + 1
-                pos = ((multi)*x) - 1 + extra
+                cell = ((multi)*x) - 1 + extra
+                pos = cell % len(cls.coords)
                 print('WARNING')
-            posvec.append(pos)
 
-            rotates[pos][0] = rot1
-            rotates[pos][1] = rot2
+            posvec.append(pos)
+            cls.rotates[pos][0] = rot1
+            cls.rotates[pos][1] = rot2
 
         print(posvec)
-        print(len(posvec))
         #print(np.array(rotates))
 
 def main():
@@ -251,7 +259,16 @@ def main():
     mesh.assignZ()
     print(len(mesh.coords))
     mesh.genRotVal()
-
+    co = np.array(mesh.coords)
+    print(co)
+    ro = np.array(mesh.rotates)
+    print(ro)
+    with open('../sphere/Origins.txt','w+') as f:
+        np.savetxt(f, co)
+        f.close()
+    with open('../sphere/Angles.txt','w+') as ff:
+        np.savetxt(ff, ro)
+        ff.close()
 
 if __name__ == '__main__':
     main()
