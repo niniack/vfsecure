@@ -153,23 +153,23 @@ class generator:
 
 def main():
     mesh = generator()
-    generator.readData()
+    mesh.readData()
 
     ######## these will be replaced #######
-    generator.origins = np.loadtxt('../sphere/origins.txt')
-    generator.angles = np.loadtxt('../sphere/angles.txt')
-    numSpheres = np.size(generator.origins,0)
+    mesh.origins = np.loadtxt('../sphere/origins.txt')
+    mesh.angles = np.loadtxt('../sphere/angles.txt')
+    numSpheres = np.size(mesh.origins,0)
     #######################################
 
-    generator.normals = np.zeros([generator.numFaces*numSpheres,3])
-    generator.shiftedVertices = np.zeros([generator.numVertices*numSpheres,3])
-    generator.rotatedVertices = np.zeros([generator.numVertices*numSpheres, 3])
+    mesh.normals = np.zeros([mesh.numFaces*numSpheres,3])
+    mesh.shiftedVertices = np.zeros([mesh.numVertices*numSpheres,3])
+    mesh.rotatedVertices = np.zeros([mesh.numVertices*numSpheres, 3])
 
 
     for i in range(numSpheres): #numSpheres
-        generator.shift(i, True)
+        mesh.shift(i, True)
 
-    generator.writeSTL()
+    mesh.writeSTL()
 
 
 if __name__ == '__main__':
