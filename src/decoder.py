@@ -23,10 +23,8 @@ HEADER_COUNT = 80
 TRI_BYTE_COUNT = 4
 DATA_COUNT = 3
 ATTR_COUNT = 1
-# import cv2
-# from pyzbar.pyzbar import decode
 
-class decoder:
+class decoder():
 
 	numTriangles=None
 	filename=None
@@ -45,9 +43,9 @@ class decoder:
 		header = df.read(80)
 		df.close()
 
+		# determine whether this is a Binary or ASCII file
 		if (header[0:5] == "solid"):
-			print
-			readText(filename)
+			print("ASCII files not yet supported!")
 
 		else:
 			cls.readBinary(filename)
@@ -55,6 +53,7 @@ class decoder:
 	@classmethod
 	def readBinary(cls,filename):
 
+		# Create data object to store values
 		dtObj = np.dtype([
         		('normals', np.float32, (3,)),
         		('vertices', np.float32, (3, 3)),
@@ -63,21 +62,27 @@ class decoder:
 
 		df = open(filename,'rb')
 
+		# Binary header
 		header = np.fromfile(df, dtype=np.uint8, count=HEADER_COUNT)
+		# Read number of triangles
 		cls.numTriangles = np.fromfile(df, dtype=np.uint32, count=1)
+		# Read remainder of data
 		mesh = np.fromfile(df, dtype=dtObj, count=-1)
+
 		df.close()
 
+		# Save data to class variables
 		cls.normals = mesh['normals']
 		cls.vertices = mesh['vertices']
 		cls.attr = mesh['attrs']
 
+		# New array with vertex data and extra col to assign form number
 		cls.mem = cls.vertices
 		cls.mem = np.insert(cls.mem, 3, -1, axis=2)
 
 	@classmethod
 	def findForm(cls, rowloc, formTag):
-
+		#
 		form = []
 		model = cls.vertices[rowloc][0]
 
@@ -144,10 +149,6 @@ class decoder:
 			wf.write(_b(np.float32(cls.normals[rows[i]][0])))
 			wf.write(_b(np.float32(cls.normals[rows[i]][1])))
 			wf.write(_b(np.float32(cls.normals[rows[i]][2])))
-
-			# print('[{0},{1},{2}]'.format(np.float32(cls.normals[rows[i]][0]),
-			# np.float32(cls.normals[rows[i]][1]),
-			# np.float32(cls.normals[rows[i]][2])))
 
 			for j in range(3):
 				wf.write(_b(np.float32(cls.vertices[rows[i]][j][0])))
@@ -316,21 +317,22 @@ def main():
 		if (formExist == False):
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
-		if(mesh.numForms > 2):
+		if(mesh.numForms > 20):
 			break
 			# plotForm(form, fig, ax)
-	mesh.extractForm(2)
+	# mesh.extractForm(20)
 
 
 
 	########## DON'T DELETE ##################
-	# model = mesh.findPoleNormal(1)
-	# subject = mesh.findPoleNormal(5)
-	#
-	# rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
+	model = mesh.findPoleNormal(1)
+	subject = mesh.findPoleNormal(1)
+
+	rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
 	##########################################
 
-
+	pp(rotPhi)
+	pp(rotTheta)
 
 	# plt.show()
 

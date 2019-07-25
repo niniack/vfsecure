@@ -7,15 +7,15 @@ from utils import _b
 
 class generator:
 
-    faces=None;
-    vertices=None;
-    origins=None;
-    normals=None;
-    shiftedVertices=None;
-    numFaces=None;
-    numVertices=None;
-
-
+    faces=None
+    vertices=None
+    origins=None
+    angles=None
+    normals=None
+    shiftedVertices=None
+    rotatedVertices=None
+    numFaces=None
+    numVertices=None
 
     @classmethod
     def readData(cls):
@@ -39,9 +39,39 @@ class generator:
 
 
     @classmethod
-    def shift(cls, index):
+    def shift(cls, index, rotateBool):
         shifted = cls.vertices + cls.origins[index]
         numFaces = np.size(cls.faces,0)
+
+        if (rotateBool == True):
+            shifted = cls.rotate(cls.origins[index], shifted, index)
+
+
+        # if (rotateBool == True):
+        #
+        #     ## Background Info:
+        #     # x = rho * sin(theta) * cos(phi)
+        #     # y = rho * sin(theta) * sin(phi)
+        #     # z = rho * cos(theta)
+        #
+        #     # Initializing rho array
+        #     rho = np.zeros([np.size(shifted,0)])
+        #     # Calculating the differences (e.g. x2-x1, y2-y1, z2-z1) and squaring them
+        #     difference = (shifted-cls.origins[index])**2
+        #
+        #     # Calculating the sqrt of the sum
+        #     for row in range(np.size(difference,0)):
+        #         rho[row] = np.sqrt(np.sum(difference[row]))
+        #
+        #     rotated = np.zeros([np.size(cls.vertices,0),3])
+        #
+        #     rotated[:,0] = rho * np.sin(cls.angles[index][0]) * np.cos(cls.angles[index][1])
+        #     rotated[:,1] = rho * np.sin(cls.angles[index][0]) * np.sin(cls.angles[index][1])
+        #     rotated[:,2] = rho * np.cos(cls.angles[index][0])
+        #
+        #     shifted = shifted + rotated
+
+        # Calculate face normals
 
         for i in range(numFaces):
 
@@ -56,6 +86,39 @@ class generator:
 
         for i in range(cls.numVertices):
             cls.shiftedVertices[(cls.numVertices*index)+i]=shifted[i]
+
+    @classmethod
+    def rotate(cls, origin, vertices, index):
+
+        # append a column of 1s to the vertices for matrix transformations
+        rawVertices = np.hstack((vertices, np.ones([np.size(vertices, 0),1])))
+
+        # Transformation matrix 1 to move vertex by diff between sphere origin and 0,0,0
+        t1 = np.identity(4)
+        t1[3,:] = np.hstack((-origin,1))
+
+        ######################## ROTATION #########################3
+        rollAngle = np.deg2rad(cls.angles[index][0])
+        roll = np.array([[1, 0, 0, 0], [0, np.cos(rollAngle), np.sin(rollAngle), 0], [0, -np.sin(rollAngle), np.cos(rollAngle), 0], [0, 0, 0, 1]] )
+
+        yawAngle = np.deg2rad(cls.angles[index][1])
+        yaw = np.array([[np.cos(yawAngle), np.sin(yawAngle), 0, 0], [-np.sin(yawAngle), np.cos(yawAngle), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        ######################## ROTATION #########################
+
+
+        # Transformatio matrix 2 to move vertex back to original location
+        t2 = np.identity(4)
+        t2[3,:] = np.hstack((origin,1))
+
+        rawVertices = np.matmul(rawVertices, t1)
+        rawVertices = np.matmul(rawVertices, roll)
+        rawVertices = np.matmul(rawVertices, yaw)
+        rawVertices = np.matmul(rawVertices, t2)
+
+
+        rawVertices = np.delete(rawVertices, 3, 1)
+        # pp(rawVertices)
+        return rawVertices
 
     @classmethod
     def writeSTL(cls):
@@ -93,21 +156,19 @@ def main():
     generator.readData()
 
     ######## these will be replaced #######
-    generator.origins = np.loadtxt('../sphere/origins.txt',delimiter=',')
+    generator.origins = np.loadtxt('../sphere/origins.txt')
+    generator.angles = np.loadtxt('../sphere/angles.txt')
     numSpheres = np.size(generator.origins,0)
     #######################################
 
     generator.normals = np.zeros([generator.numFaces*numSpheres,3])
     generator.shiftedVertices = np.zeros([generator.numVertices*numSpheres,3])
+    generator.rotatedVertices = np.zeros([generator.numVertices*numSpheres, 3])
 
 
-    # for i in range(numSpheres):
-    #     generator.shift(i)
+    for i in range(numSpheres): #numSpheres
+        generator.shift(i, True)
 
-    for i in range(numSpheres):
-        generator.shift(i)
-
-    pp(generator.shiftedVertices)
     generator.writeSTL()
 
 
