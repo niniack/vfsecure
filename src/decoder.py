@@ -280,6 +280,28 @@ class decoder():
 
 		return rotPhi, rotTheta
 
+	@classmethod
+	def findAngleDiffToAxes(cls, model):
+
+		# # normal for x axis
+		# x = np.array([0,0,1])
+		# z = np.array([0,0,1])
+
+		# conversion from cartesian to spherical formula
+		mPhi = np.rad2deg(np.arctan2(math.sqrt(math.pow(model[0],2)+math.pow(model[1],2)),model[2]))
+		mTheta = np.rad2deg(np.arctan2(model[1], model[0]))
+
+		# xAxisPhi = np.rad2deg(np.arctan2(math.sqrt(math.pow(x[0],2)+math.pow(x[1],2)),x[2]))
+		# zAxisTheta = np.rad2deg(np.arctan2(z[1], z[0]))
+		rotPhi = mPhi
+		rotTheta = mTheta+90
+
+		# pp(xAxisPhi)
+		# pp(zAxisTheta)
+		return rotPhi, rotTheta
+
+
+
 def plotForm(form, fig, ax):
 
 	xdata = []
@@ -317,7 +339,7 @@ def main():
 		if (formExist == False):
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
-		if(mesh.numForms > 20):
+		if(mesh.numForms > 10):
 			break
 			# plotForm(form, fig, ax)
 	# mesh.extractForm(20)
@@ -325,14 +347,15 @@ def main():
 
 
 	########## DON'T DELETE ##################
-	model = mesh.findPoleNormal(1)
+	model = mesh.findPoleNormal(9)
 	subject = mesh.findPoleNormal(1)
 
-	rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
+	# rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
+	rotPhi, rotTheta = mesh.findAngleDiffToAxes(model)
+	pp("rotPhi: " + str(rotPhi))
+	pp("rotTheta: " + str(rotTheta))
 	##########################################
 
-	pp(rotPhi)
-	pp(rotTheta)
 
 	# plt.show()
 

@@ -219,8 +219,8 @@ class generator:
 
         cls.angles = []
         for a in range(len(cls.origins)):
-            rot1 = 360*random.random()
-            rot2 = 360*random.random()
+            rot1 = 180*random.random()
+            rot2 = 180*random.random()
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
             cls.angles.append([rot1, rot2])
@@ -230,8 +230,8 @@ class generator:
         multi = int(str(cls.key)[2:4])
         multi = 1
 
-        mr1 = 360*random.random()
-        mr2 = 360*random.random()
+        mr1 = 180*random.random()
+        mr2 = 180*random.random()
         mr1 = float(truncate(mr1, 5))
         mr2 = float(truncate(mr2, 5))
 
@@ -239,8 +239,8 @@ class generator:
         extra = 0
         for x in range(1,33):
             digits = cls.hash[2*(x-1):2*x]
-            rot1 = (mr1 + (int(digits[0], 16) * 180/16 - random.random() * 180/16)) % 360
-            rot2 = (mr2 + (int(digits[1], 16) * 180/16 - random.random() * 180/16)) % 360
+            rot1 = (mr1 + (int(digits[0], 16) * 180/16 - random.random() * 180/16)) % 180
+            rot2 = (mr2 + (int(digits[1], 16) * 180/16 - random.random() * 180/16)) % 180
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
             cell = ((multi)*x) - 1 - extra
@@ -260,7 +260,7 @@ class generator:
             cell = ((multi)*x) - 1 + extra
             pos = cell % len(cls.origins)
             # print(cls.angles[pos])
-            cls.angles[pos][0] = cls.angles[model-1][1]
+            cls.angles[pos] = cls.angles[model-1]
             # print(cls.angles[pos])
 
         cls.angles[model-1][0] = mr1
@@ -399,7 +399,7 @@ def main():
     generator.origins = np.array(generator.origins)
     generator.angles = np.array(generator.angles)
 
-    pp(mesh.origins)
+    # pp(mesh.origins)
 
     # initialize array for normals
     generator.normals = np.zeros([mesh.numFaces*mesh.numSpheres,3])
@@ -408,11 +408,15 @@ def main():
     generator.shiftedVertices = np.zeros([mesh.numVertices*mesh.numSpheres,3])
 
     # shift each sphere by its origin value
+    # The boolean controls rotation: True = rotate; False = no rotate;
     for i in range(mesh.numSpheres): #numSpheres
         mesh.shift(i, True)
 
     # write out STL file
     mesh.writeSTL()
+
+    # FOR DEBUGGING DECODER PURPOSES
+    np.savetxt("../legacy/angles.txt", mesh.angles)
 
 
 if __name__ == '__main__':
