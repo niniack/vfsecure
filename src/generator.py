@@ -18,7 +18,7 @@ from utils import _b
 
 
 class generator:
-    key = '0205'
+    key = '0101'
     hash = "beefe1dddd1f8ecc33e5b8f0b0a0ae737eff02a71b39c4c5ef4ebae8b794089b"
     print(len(hash))
     ResizeMTX = None
@@ -26,6 +26,12 @@ class generator:
     coords = None
     rotates = None
     dt = None
+
+    @classmethod
+    def genKey(cls):
+        key = random.sample(range(9),4)
+        key = key[0]*1000 + key[1]*100 + key[2]*10 + key[3]
+        print(key)
 
     @classmethod
     def readMatrix(cls):
@@ -208,28 +214,29 @@ class generator:
 
         cls.rotates = []
         for a in range(len(cls.coords)):
-            rot1 = 360*random.random()
-            rot2 = 360*random.random()
+            rot1 = 180*random.random()
+            rot2 = 180*random.random()
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
             cls.rotates.append([rot1, rot2])
 
         model = int(str(cls.key)[:2])
-        model = 3
-        multi = int(str(cls.key)[2:4])
-        multi = 1
 
-        mr1 = 360*random.random()
-        mr2 = 360*random.random()
+        multi = int(str(cls.key)[2:4])
+        print(model,multi)
+
+        mr1 = 90*random.random()
+        mr2 = 90*random.random()
         mr1 = float(truncate(mr1, 5))
         mr2 = float(truncate(mr2, 5))
+        print(mr1,mr2)
 
         posvec = []
         extra = 0
         for x in range(1,33):
             digits = cls.hash[2*(x-1):2*x]
-            rot1 = (mr1 + (int(digits[0], 16) * 180/16 - random.random() * 180/16)) % 360
-            rot2 = (mr2 + (int(digits[1], 16) * 180/16 - random.random() * 180/16)) % 360
+            rot1 = (mr1 + (int(digits[0], 16) * 180/16 - random.random() * 180/16)) % 180
+            rot2 = (mr2 + (int(digits[1], 16) * 180/16 - random.random() * 180/16)) % 180
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
             cell = ((multi)*x) - 1 - extra
@@ -242,26 +249,63 @@ class generator:
             posvec.append(pos)
             cls.rotates[pos][0] = rot1
             cls.rotates[pos][1] = rot2
-            print(x)
+
+
 
         if model in posvec:
             x = 33
             cell = ((multi)*x) - 1 + extra
             pos = cell % len(cls.coords)
-            print(cls.rotates[pos])
-            cls.rotates[pos][0] = cls.rotates[model-1][1]
-            print(cls.rotates[pos])
+            cls.rotates[pos] = cls.rotates[model-1]
+            print('ALLLLLLL')
 
-        cls.rotates[model-1][0] = mr1
-        cls.rotates[model-1][1] = mr2
+        cls.rotates[model-1] = [mr1,mr2]
+        #rot1 is about x axis
+        #rot2 is about z axis
+        print(np.array(cls.rotates))
+    @classmethod
+    def readSTL(cls):
+        model =  int(str(output)[:2])
+        multi =  int(str(output)[2:4])
+
+    @classmethod
+    def readRot(cls):
+        # read model offset from sphere
+        amod = function(model,origin)
+
+
+        # read all of the cells
+        posvec = []
+        extra = 0
+        for x in range(1,33):
+            cell = ((multi)*x) - 1 - extra
+            pos = cell % len(cls.coords)
+            while pos in posvec:
+                extra = extra + 1
+                cell = ((multi)*x) - 1 + extra
+                pos = cell % len(cls.coords)
+            unhash[x-1] = function(pos,amod)
+            posvec.append(pos)
+
+
+        if model in posvec:
+            x = 33
+            cell = ((multi)*x) - 1 + extra
+            pos = cell % len(cls.coords)
+            cls.rotates[pos][0] = cls.rotates[model-1][1]
+
+
+    #@classmethod
+    #def decypherRot(cls):
+
 
 def main():
     mesh = generator()
+    mesh.genKey()
     mesh.readMatrix()
     mesh.CODExy()
     mesh.FOGxy()
     mesh.assignZ()
-    print(len(mesh.coords))
     mesh.genRotVal()
 
 
