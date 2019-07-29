@@ -35,6 +35,7 @@ class decoder():
 	size=None
 	model = None
 	numForms=0
+	multi=None
 
 	@classmethod
 	def readSTL(cls, filename):
@@ -320,46 +321,46 @@ class decoder():
 		return rotPhi, rotTheta
 
 	@classmethod
-    def readSTL(cls):
-        #model =  int(str(output)[:2])
-		cls.model = 2
-        #multi =  int(str(output)[2:4])
-		multi = 5
+	def readDMX(cls):
+    	#model =  int(str(output)[:2])
+		cls.mod = 2
+    	#multi =  int(str(output)[2:4])
+		cls.multi = 5
 
-    @classmethod
-    def readRot(cls):
+	@classmethod
+	def readRot(cls):
         # read model offset from sphere
-        amod = function(model,origin)
+        # modelPhi, modelTheta = cls.findAngleDiffToAxes(model)
+
+		model = cls.findPoleNormal(cls.mod)
+
 
         # read all of the cells
-        posvec = []
-        extra = 0
-        for x in range(1,33):
-            cell = ((multi)*x) - 1 - extra
-            pos = cell % cls.numForms
-            while pos in posvec:
-                extra = extra + 1
-                cell = ((multi)*x) - 1 + extra
-                pos = cell % cls.numForms
-            unhash[x-1] = function(pos,amod)
-            posvec.append(pos)
+		posvec = []
+		unhash = np.zeros([32,2])
+		extra = 0
+		for x in range(1,33):
+			cell = ((cls.multi)*x) - 1 - extra
+			pos = cell % cls.numForms
+			while pos in posvec:
+				extra = extra + 1
+				cell = ((cls.multi)*x) - 1 + extra
+				pos = cell % cls.numForms
+			subject = cls.findPoleNormal(pos)
+			unhash[x-1] = cls.findAngleDiff(model,subject)
+			posvec.append(pos)
 
-        if model in posvec:
-            x = 33
-            cell = ((multi)*x) - 1 + extra
-            pos = cell % cls.numForms
-            # print(cls.angles[pos])
-            cls.angles[pos] = cls.angles[model-1]
-            # print(cls.angles[pos])
+		pp(unhash)
 
 
-    @classmethod
-    def unhashRot
 
-        values = [123.4, 11.5, 99.1, 0.1]
-
-        for range(32)
-            digits = int(digits[0], 16)
+    # @classmethod
+    # def unhashRot(cls):
+	#
+    #     values = [123.4, 11.5, 99.1, 0.1]
+	#
+    #     for range(32):
+    #         digits = int(digits[0], 16)
 
 def plotForm(form, fig, ax):
 
@@ -398,7 +399,7 @@ def main():
 		if (formExist == False):
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
-		# if(mesh.numForms > 10):
+		# if(mesh.numForms > 20):
 		# 	break
 			# plotForm(form, fig, ax)
 	# mesh.extractForm(20)
@@ -406,16 +407,19 @@ def main():
 
 
 	########## DON'T DELETE ##################
-	model = mesh.findPoleNormal(cls.model)
-	subject = mesh.findPoleNormal(146)
+	# model = mesh.findPoleNormal(cls.model)
+	# subject = mesh.findPoleNormal(146)
+	#
+	# rotAngles = np.zeros()
+	#
+	# #rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
+	# modelPhi, modelTheta = mesh.findAngleDiffToAxes(model)
 
-	#rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
-	rotPhi, rotTheta = mesh.findAngleDiffToAxes(model)
+	mesh.readDMX()
+	mesh.readRot()
 
-
-
-	pp("rotPhi: " + str(rotPhi))
-	pp("rotTheta: " + str(rotTheta))
+	# pp("rotPhi: " + str(rotPhi))
+	# pp("rotTheta: " + str(rotTheta))
 	##########################################
 
 
