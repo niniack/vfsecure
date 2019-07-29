@@ -1,8 +1,7 @@
 #!/usr/bir/env python3
-# Materials Used: https://barcode.tec-it.com/en/DataMatrix?data=Hi
-# Description: generate a 10 by 10 code with no quiet space
-# Authors: Michael Linares (@michaellinares) and Nishant Aswani (@niniack)
-
+# https://barcode.tec-it.com/en/DataMatrix?data=Hi
+# generate a 10 by 10 code with no quiet space
+#python3 ./dmgen.pv
 
 from matplotlib.image import imread, imsave
 import numpy as np
@@ -11,7 +10,7 @@ import math
 import random
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-# from pylibdmtx.pylibdmtx import encode
+from pylibdmtx.pylibdmtx import encode
 
 from pprintpp import pprint as pp
 
@@ -19,24 +18,20 @@ from utils import _b
 
 
 class generator:
-
-    #dmgen vars
-    key = '0205'
+    key = '0101'
     hash = "beefe1dddd1f8ecc33e5b8f0b0a0ae737eff02a71b39c4c5ef4ebae8b794089b"
-    # print(len(hash))
+    print(len(hash))
     ResizeMTX = None
     fogdim = None
-    origins = None
-    angles = None
+    coords = None
+    rotates = None
     dt = None
 
-    #genspheres vars
-    faces=None
-    vertices=None
-    normals=None
-    shiftedVertices=None
-    numFaces=None
-    numVertices=None
+    @classmethod
+    def genKey(cls):
+        key = random.sample(range(9),4)
+        key = key[0]*1000 + key[1]*100 + key[2]*10 + key[3]
+        print(key)
 
     @classmethod
     def readMatrix(cls):
@@ -143,7 +138,7 @@ class generator:
         count = 0
         density = 0.5
         noc =  math.floor(density *((cls.fogdim/2)**2)*3.14)
-        cls.origins = []
+        cls.coords = []
         redo = 1
 
         for i in range(noc):
@@ -151,7 +146,7 @@ class generator:
             y = random.randint(0,cls.fogdim)
             XY = [x,y]
             redo = 0
-            if XY in cls.origins:
+            if XY in cls.coords:
                 count = count + 1
                 redo = 1
             while ((x-cls.fogdim/2)**2) + ((y-cls.fogdim/2)**2) > (cls.fogdim/2)**2 or redo:
@@ -159,33 +154,33 @@ class generator:
                 y = random.randint(0,cls.fogdim)
                 XY = [x, y]
                 redo = 0
-                if XY in cls.origins:
+                if XY in cls.coords:
                     count = count + 1
                     redo = 1
 
-            cls.origins.append(XY)
+            cls.coords.append(XY)
 
         for c in range(len(cls.dt)):
-            if cls.dt[c] in cls.origins:
-                cls.origins.remove(cls.dt[c])
+            if cls.dt[c] in cls.coords:
+                cls.coords.remove(cls.dt[c])
 
-        cls.origins = cls.origins + cls.codecoords
+        cls.coords = cls.coords + cls.codecoords
 
     @classmethod
     def assignZ(cls):
-        # cls.origins
+        cls.coords
         count = 0
 
-        for t in range(len(cls.origins)):
-            x = cls.origins[t][0]
-            y = cls.origins[t][1]
+        for t in range(len(cls.coords)):
+            x = cls.coords[t][0]
+            y = cls.coords[t][1]
             z = random.randint(0,cls.fogdim)
 
             while ((x-cls.fogdim/2)**2) + ((y-cls.fogdim/2)**2) + ((z-cls.fogdim/2)**2) > (cls.fogdim/2)**2 and count < 10000:
                 count = count + 1
                 z = random.randint(0,cls.fogdim)
             count = 0
-            cls.origins[t].append(z)
+            cls.coords[t].append(z)
 
         def Sort(sub_li):
             sub_li.sort(key = lambda x: (x[0], x[1]))
@@ -196,10 +191,10 @@ class generator:
         xvals = []
         yvals = []
         zvals = []
-        for i in range(len(cls.origins)):
-            xvals.append(cls.origins[i][0])
-            yvals.append(cls.origins[i][1])
-            zvals.append(cls.origins[i][2])
+        for i in range(len(cls.coords)):
+            xvals.append(cls.coords[i][0])
+            yvals.append(cls.coords[i][1])
+            zvals.append(cls.coords[i][2])
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -223,17 +218,18 @@ class generator:
             rot2 = 180*random.random()
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
-            cls.angles.append([rot1, rot2])
+            cls.rotates.append([rot1, rot2])
 
         model = int(str(cls.key)[:2])
-        model = 3
+
         multi = int(str(cls.key)[2:4])
-        multi = 1
+        print(model,multi)
 
         mr1 = 180*random.random()
         mr2 = 180*random.random()
         mr1 = float(truncate(mr1, 5))
         mr2 = float(truncate(mr2, 5))
+        print(mr1,mr2)
 
         posvec = []
         extra = 0
@@ -244,16 +240,17 @@ class generator:
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
             cell = ((multi)*x) - 1 - extra
-            pos = cell % len(cls.origins)
+            pos = cell % len(cls.coords)
             while pos in posvec:
                 extra = extra + 1
                 cell = ((multi)*x) - 1 + extra
-                pos = cell % len(cls.origins)
+                pos = cell % len(cls.coords)
 
             posvec.append(pos)
-            cls.angles[pos][0] = rot1
-            cls.angles[pos][1] = rot2
-            # print(x)
+            cls.rotates[pos][0] = rot1
+            cls.rotates[pos][1] = rot2
+
+
 
         if model in posvec:
             x = 33
@@ -263,131 +260,54 @@ class generator:
             cls.angles[pos] = cls.angles[model-1]
             # print(cls.angles[pos])
 
-        cls.angles[model-1][0] = mr1
-        cls.angles[model-1][1] = mr2
+        cls.rotates[model-1] = [mr1,mr2]
+        #rot1 is about x axis
+        #rot2 is about z axis
+        print(np.array(cls.rotates))
 
     @classmethod
-    def readModel(cls):
-        # open two file buffers to read faces and vertices data
-        vd = open('../sphere/vertices.txt','rb')
-        fd = open('../sphere/faces.txt', 'rb')
-
-        # load the buffers into arrays
-        cls.vertices = np.loadtxt(vd,np.float32)
-        cls.faces = np.loadtxt(fd,np.int32)
-
-        # close the buffers to avoid data being overwritten or corrupted
-        vd.close()
-        fd.close()
-
-        # convert from MATLAB indexing to Python indexing by subtracting 1
-        cls.faces = np.subtract(cls.faces,1)
-
-        cls.numFaces = np.size(cls.faces,0)
-        cls.numVertices = np.size(cls.vertices,0)
+    def readSTL(cls):
+        model =  int(str(output)[:2])
+        multi =  int(str(output)[2:4])
 
     @classmethod
-    def shift(cls, index, rotateBool):
-
-        shifted = cls.vertices + cls.origins[index]
-
-        numFaces = np.size(cls.faces,0)
-
-        if (rotateBool == True):
-            shifted = cls.rotate(cls.origins[index], shifted, index)
-
-        for i in range(numFaces):
-
-            v0 = int(cls.faces[i][0])
-            v1 = int(cls.faces[i][1])
-            v2 = int(cls.faces[i][2])
-
-            vec1 = shifted[v1] - shifted[v0]
-            vec2 = shifted[v2] - shifted[v0]
-
-            cls.normals[(numFaces*index)+i]=np.cross(vec1, vec2)
-
-        for i in range(cls.numVertices):
-            cls.shiftedVertices[(cls.numVertices*index)+i]=shifted[i]
-
-    @classmethod
-    def rotate(cls, origin, vertices, index):
-
-        # append a column of 1s to the vertices for matrix transformations
-        rawVertices = np.hstack((vertices, np.ones([np.size(vertices, 0),1])))
-
-        # Transformation matrix 1 to move vertex by diff between sphere origin and 0,0,0
-        t1 = np.identity(4)
-        t1[3,:] = np.hstack((-origin,1))
-
-        ######################## ROTATION #########################3
-        rollAngle = np.deg2rad(cls.angles[index][0])
-        roll = np.array([[1, 0, 0, 0], [0, np.cos(rollAngle), np.sin(rollAngle), 0], [0, -np.sin(rollAngle), np.cos(rollAngle), 0], [0, 0, 0, 1]] )
-
-        yawAngle = np.deg2rad(cls.angles[index][1])
-        yaw = np.array([[np.cos(yawAngle), np.sin(yawAngle), 0, 0], [-np.sin(yawAngle), np.cos(yawAngle), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
-        ######################## ROTATION #########################
+    def readRot(cls):
+        # read model offset from sphere
+        amod = function(model,origin)
 
 
-        # Transformatio matrix 2 to move vertex back to original location
-        t2 = np.identity(4)
-        t2[3,:] = np.hstack((origin,1))
+        # read all of the cells
+        posvec = []
+        extra = 0
+        for x in range(1,33):
+            cell = ((multi)*x) - 1 - extra
+            pos = cell % len(cls.coords)
+            while pos in posvec:
+                extra = extra + 1
+                cell = ((multi)*x) - 1 + extra
+                pos = cell % len(cls.coords)
+            unhash[x-1] = function(pos,amod)
+            posvec.append(pos)
 
-        rawVertices = np.matmul(rawVertices, t1)
-        rawVertices = np.matmul(rawVertices, roll)
-        rawVertices = np.matmul(rawVertices, yaw)
-        rawVertices = np.matmul(rawVertices, t2)
 
-
-        rawVertices = np.delete(rawVertices, 3, 1)
-        # pp(rawVertices)
-        return rawVertices
+        if model in posvec:
+            x = 33
+            cell = ((multi)*x) - 1 + extra
+            pos = cell % len(cls.coords)
+            cls.rotates[pos][0] = cls.rotates[model-1][1]
 
     @classmethod
-    def writeSTL(cls):
+    def decypherRot(cls):
+        j
 
-        numSpheres = np.size(cls.origins,0)
-
-        #normalizing normals
-        cls.normals =  cls.normals*(1/np.sqrt(np.add(cls.normals*cls.normals,1)))
-
-        wf = open('sphere.stl', 'wb+')
-        wf.write(_b("\0"*80))
-
-        wf.write(_b(np.uint32(cls.numFaces*numSpheres)))
-
-        for i in range(cls.numFaces*numSpheres):
-            wf.write(_b(np.float32(cls.normals[i][0])))
-            wf.write(_b(np.float32(cls.normals[i][1])))
-            wf.write(_b(np.float32(cls.normals[i][2])))
-            for j in range(3):
-
-                sphereNum = math.floor(i/cls.numFaces)
-                indicesFromSphereZero = cls.numFaces*sphereNum
-
-                wf.write(_b(np.float32(cls.shiftedVertices[ cls.faces[i-indicesFromSphereZero][j]+(cls.numVertices*sphereNum) ][0])))
-                wf.write(_b(np.float32(cls.shiftedVertices[ cls.faces[i-indicesFromSphereZero][j]+(cls.numVertices*sphereNum) ][1])))
-                wf.write(_b(np.float32(cls.shiftedVertices[ cls.faces[i-indicesFromSphereZero][j]+(cls.numVertices*sphereNum) ][2])))
-
-            wf.write(_b(np.uint16(0)))
-
-        wf.close()
 
 def main():
-    # create mesh object
     mesh = generator()
-    # reading matrix
+    mesh.genKey()
     mesh.readMatrix()
-    # x,y coordinates for matrix cells
-    generator.CODExy()
-    # x,y coordinates for FOG
+    mesh.CODExy()
     mesh.FOGxy()
-    # z coordinates for each x,y
     mesh.assignZ()
-
-    # print(len(mesh.origins))
-
-    # encode hash in rotation
     mesh.genRotVal()
     # read model sphere from matlab data
     mesh.readModel()
@@ -412,8 +332,6 @@ def main():
     for i in range(mesh.numSpheres): #numSpheres
         mesh.shift(i, True)
 
-    # write out STL file
-    mesh.writeSTL()
 
     # FOR DEBUGGING DECODER PURPOSES
     np.savetxt("../legacy/angles.txt", mesh.angles)
