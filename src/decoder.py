@@ -261,22 +261,38 @@ class decoder():
 		nsPhi = np.rad2deg(np.arctan2(math.sqrt(math.pow(nsubject[0],2)+math.pow(nsubject[1],2)),nsubject[2]))
 
 		# Theta value of vectors (angle from the positive x-axis)
-		mTheta = np.rad2deg(np.arctan2(model[1], model[0]))
-		sTheta = np.rad2deg(np.arctan2(subject[1], subject[0]))
-		nsTheta = np.rad2deg(np.arctan2(nsubject[1], nsubject[0]))
+		mTheta = np.rad2deg(np.arctan2(model[1], model[0])) + 90
+		sTheta = np.rad2deg(np.arctan2(subject[1], subject[0])) + 90
+		nsTheta = np.rad2deg(np.arctan2(nsubject[1], nsubject[0])) + 90
 
+		# pp(mPhi)
+		# pp(sPhi)
+		# pp(nsPhi)
 
 		# The smaller of the two phi differences is for the "correct" pole
-		diffPhi1 = abs(mPhi - sPhi)
-		diffPhi2 = abs(mPhi - nsPhi)
+		rotPhi = abs(mPhi - sPhi)
+		rotTheta = abs(mTheta - sTheta)
 
-		if (diffPhi1 > diffPhi2):
-			rotPhi = diffPhi2
-			rotTheta = abs(mTheta-nsTheta)
+		pp(mPhi)
+		pp(sPhi)
 
-		else:
-			rotPhi = diffPhi1
-			rotTheta = abs(mTheta-sTheta)
+		pp("-----")
+
+		pp(mTheta)
+		pp(sTheta)
+
+		# diffPhi2 = abs(mPhi - nsPhi)
+
+		## LEGACY
+		################################
+		# if (diffPhi1 > diffPhi2):
+		# 	rotPhi = diffPhi2
+		# 	rotTheta = abs(mTheta-nsTheta)
+		#
+		# else:
+		# 	rotPhi = diffPhi1
+		# 	rotTheta = abs(mTheta-sTheta)
+		################################
 
 		return rotPhi, rotTheta
 
@@ -339,19 +355,19 @@ def main():
 		if (formExist == False):
 			form = mesh.findForm(rowloc, formTag)
 			formTag += 1
-		if(mesh.numForms > 10):
-			break
+		# if(mesh.numForms > 10):
+		# 	break
 			# plotForm(form, fig, ax)
 	# mesh.extractForm(20)
 
 
 
 	########## DON'T DELETE ##################
-	model = mesh.findPoleNormal(9)
-	subject = mesh.findPoleNormal(1)
+	model = mesh.findPoleNormal(145)
+	subject = mesh.findPoleNormal(146)
 
-	# rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
-	rotPhi, rotTheta = mesh.findAngleDiffToAxes(model)
+	rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
+	# rotPhi, rotTheta = mesh.findAngleDiffToAxes(model)
 	pp("rotPhi: " + str(rotPhi))
 	pp("rotTheta: " + str(rotTheta))
 	##########################################
