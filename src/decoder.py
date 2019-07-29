@@ -33,6 +33,7 @@ class decoder():
 	mem=None
 	attrs=None
 	size=None
+	model = None
 	numForms=0
 
 	@classmethod
@@ -198,6 +199,8 @@ class decoder():
 
 		return(poleVertexNormal)
 
+
+
 		# origins = findCircumcenter(poleFaces, 14)
 		# plotNormals(origins, poleFaceNormals, 14)
 
@@ -316,7 +319,47 @@ class decoder():
 		# pp(zAxisTheta)
 		return rotPhi, rotTheta
 
+	@classmethod
+    def readSTL(cls):
+        #model =  int(str(output)[:2])
+		cls.model = 2
+        #multi =  int(str(output)[2:4])
+		multi = 5
 
+    @classmethod
+    def readRot(cls):
+        # read model offset from sphere
+        amod = function(model,origin)
+
+        # read all of the cells
+        posvec = []
+        extra = 0
+        for x in range(1,33):
+            cell = ((multi)*x) - 1 - extra
+            pos = cell % cls.numForms
+            while pos in posvec:
+                extra = extra + 1
+                cell = ((multi)*x) - 1 + extra
+                pos = cell % cls.numForms
+            unhash[x-1] = function(pos,amod)
+            posvec.append(pos)
+
+        if model in posvec:
+            x = 33
+            cell = ((multi)*x) - 1 + extra
+            pos = cell % cls.numForms
+            # print(cls.angles[pos])
+            cls.angles[pos] = cls.angles[model-1]
+            # print(cls.angles[pos])
+
+
+    @classmethod
+    def unhashRot
+
+        values = [123.4, 11.5, 99.1, 0.1]
+
+        for range(32)
+            digits = int(digits[0], 16)
 
 def plotForm(form, fig, ax):
 
@@ -363,11 +406,14 @@ def main():
 
 
 	########## DON'T DELETE ##################
-	model = mesh.findPoleNormal(145)
+	model = mesh.findPoleNormal(cls.model)
 	subject = mesh.findPoleNormal(146)
 
-	rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
-	# rotPhi, rotTheta = mesh.findAngleDiffToAxes(model)
+	#rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
+	rotPhi, rotTheta = mesh.findAngleDiffToAxes(model)
+
+
+
 	pp("rotPhi: " + str(rotPhi))
 	pp("rotTheta: " + str(rotTheta))
 	##########################################
