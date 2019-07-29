@@ -263,6 +263,7 @@ class generator:
         #rot1 is about x axis
         #rot2 is about z axis
         print(np.array(cls.rotates))
+
     @classmethod
     def readSTL(cls):
         model =  int(str(output)[:2])
@@ -294,9 +295,9 @@ class generator:
             pos = cell % len(cls.coords)
             cls.rotates[pos][0] = cls.rotates[model-1][1]
 
-
-    #@classmethod
-    #def decypherRot(cls):
+    @classmethod
+    def decypherRot(cls):
+        j
 
 
 def main():
