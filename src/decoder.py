@@ -323,7 +323,7 @@ class decoder():
 	@classmethod
 	def readDMX(cls):
     	#model =  int(str(output)[:2])
-		cls.mod = 2
+		cls.mod = 1
     	#multi =  int(str(output)[2:4])
 		cls.multi = 5
 
@@ -346,7 +346,7 @@ class decoder():
 				extra = extra + 1
 				cell = ((cls.multi)*x) - 1 + extra
 				pos = cell % cls.numForms
-			subject = cls.findPoleNormal(pos)
+			subject = cls.findPoleNormal(pos-1)
 			unhash[x-1] = cls.findAngleDiff(model,subject)
 			posvec.append(pos)
 

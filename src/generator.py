@@ -219,19 +219,17 @@ class generator:
 
         cls.angles = []
         for a in range(len(cls.origins)):
-            rot1 = 180*random.random()
-            rot2 = 180*random.random()
+            rot1 = 90*random.random()
+            rot2 = 90*random.random()
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
             cls.angles.append([rot1, rot2])
 
         model = int(str(cls.key)[:2])
-        model = 3
         multi = int(str(cls.key)[2:4])
-        multi = 1
 
-        mr1 = 180*random.random()
-        mr2 = 180*random.random()
+        mr1 = 90*random.random()
+        mr2 = 90*random.random()
         mr1 = float(truncate(mr1, 5))
         mr2 = float(truncate(mr2, 5))
 
@@ -239,8 +237,8 @@ class generator:
         extra = 0
         for x in range(1,33):
             digits = cls.hash[2*(x-1):2*x]
-            rot1 = (mr1 + (int(digits[0], 16) * 180/16 - random.random() * 180/16)) % 180
-            rot2 = (mr2 + (int(digits[1], 16) * 180/16 - random.random() * 180/16)) % 180
+            rot1 = (mr1 + (int(digits[0], 16) * 90/16 - random.random() * 90/16)) % 90
+            rot2 = (mr2 + (int(digits[1], 16) * 90/16 - random.random() * 90/16)) % 90
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
             cell = ((multi)*x) - 1 - extra
