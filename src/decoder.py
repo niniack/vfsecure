@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
-# decoder.py v1 - script to decode the digitally encrypted STL file
-# Authors: Nishant Aswani (@niniack) and Michael Linares (@michaellinares)
+# decoder.py v1 - Python script to extract separate entities from each other in an STL file
+# by Nishant Aswani @niniack
 # Composite Materials and Mechanics Laboratory, Copyright 2019
 
 import argparse
@@ -329,9 +329,9 @@ class decoder():
 	@classmethod
 	def readDMX(cls):
     	#model =  int(str(output)[:2])
-		cls.mod = 1
+		cls.mod = 4
     	#multi =  int(str(output)[2:4])
-		cls.multi = 1
+		cls.multi = 4
 
 	@classmethod
 	def readRot(cls):
@@ -350,6 +350,7 @@ class decoder():
 		posvec = []
 		unhash = ''
 		extra = 0
+
 		for x in range(1,33):
 			cell = ((cls.multi)*x) - extra
 			pos = cell % cls.numForms
@@ -358,29 +359,30 @@ class decoder():
 				cell = ((cls.multi)*x) + extra
 				pos = cell % cls.numForms
 			posvec.append(pos)
+		print(posvec)
 
+		if cls.mod in posvec:
+			x = 33
+			cell = ((cls.multi)*x) + extra
+			pos = cell % cls.numForms
+			posvec[(cls.mod in posvec)-1]=pos
+		print(posvec)
+
+		for y in range(len(posvec)):
+			pos = posvec[y]
 			subject = cls.findPoleNormal(pos)
 			val = cls.findAngleDiff(model,subject)
-
 			val1 = toHEX(math.ceil(val[0]*16/90))
 			val2 = toHEX(math.ceil(val[1]*16/90))
 			unhash = unhash + val1
 			unhash = unhash + val2
 
-		pp(posvec)
-		if cls.mod in posvec:
-			x = 33
-			cell = ((cls.multi)*x) + extra
-			pos = cell % cls.numForms
-			subject = cls.findPoleNormal(pos)
-			val = cls.findAngleDiff(model,subject)
-			val1 = toHEX(math.ceil(val[0]*16/90))
-			print(val1)
+
 
 		pp(unhash)
 		pp(len(unhash))
 
-
+		hash = "beefe1dddd1f8ecc33e5b8f0b0a0ae737eff02a71b39c4c5ef4ebae8b794089b"
 def plotForm(form, fig, ax):
 
 	xdata = []
