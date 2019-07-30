@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
-# decoder.py v1 - Python script to extract separate entities from each other in an STL file
-# by Nishant Aswani @niniack
+# decoder.py v1 - script to decode the digitally encrypted STL file
+# Authors: Nishant Aswani (@niniack) and Michael Linares (@michaellinares)
 # Composite Materials and Mechanics Laboratory, Copyright 2019
 
 import argparse
