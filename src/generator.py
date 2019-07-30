@@ -21,7 +21,7 @@ from utils import _b
 class generator:
 
     #dmgen vars
-    key = '0205'
+    key = '0101'
     hash = "beefe1dddd1f8ecc33e5b8f0b0a0ae737eff02a71b39c4c5ef4ebae8b794089b"
     # print(len(hash))
     ResizeMTX = None
@@ -89,7 +89,7 @@ class generator:
 
         a = np.array(cls.ResizeMTX)
         codedim = a.shape[1]
-        factor = 2#input("Fog Factor:")
+        factor = 1.5#input("Fog Factor:")
         cls.fogdim = math.ceil(factor*codedim)
 
         offset = math.sqrt(2) * codedim/2
@@ -235,34 +235,43 @@ class generator:
 
         posvec = []
         extra = 0
+        spec = 90
         for x in range(1,33):
             digits = cls.hash[2*(x-1):2*x]
-            rot1 = (mr1 + (int(digits[0], 16) * 90/16 - random.random() * 90/16)) % 90
-            rot2 = (mr2 + (int(digits[1], 16) * 90/16 - random.random() * 90/16)) % 90
-            rot1 = float(truncate(rot1, 5))
-            rot2 = float(truncate(rot2, 5))
-            cell = ((multi)*x) - 1 - extra
+            rot1 = (int(digits[0], 16) * spec/16 + random.random() * spec/16)
+            rot2 = (int(digits[1], 16) * spec/16 + random.random() * spec/16)
+            rot11 = float(truncate(((mr1+rot1) % spec), 5))
+            rot22 = float(truncate(((mr2+rot2) % spec), 5))
+            cell = ((multi)*x) - extra
             pos = cell % len(cls.origins)
             while pos in posvec:
                 extra = extra + 1
-                cell = ((multi)*x) - 1 + extra
+                cell = ((multi)*x) + extra
                 pos = cell % len(cls.origins)
 
             posvec.append(pos)
-            cls.angles[pos][0] = rot1
-            cls.angles[pos][1] = rot2
-            # print(x)
+            cls.angles[pos][0] = rot11
+            cls.angles[pos][1] = rot22
+            if x < 0 :
+                print(model,multi)
+                print(mr1,mr2)
+                print(digits)
+                print(rot1,rot2)
+                print(rot11,rot22)
+                print(extra)
+                print(pos)
 
         if model in posvec:
             x = 33
-            cell = ((multi)*x) - 1 + extra
+            cell = ((multi)*x) + extra
             pos = cell % len(cls.origins)
             # print(cls.angles[pos])
             cls.angles[pos] = cls.angles[model-1]
             # print(cls.angles[pos])
 
-        cls.angles[model-1][0] = mr1
-        cls.angles[model-1][1] = mr2
+        cls.angles[model][0] = mr1
+        cls.angles[model][1] = mr2
+        print(posvec)
 
     @classmethod
     def readModel(cls):
@@ -370,6 +379,7 @@ class generator:
             wf.write(_b(np.uint16(0)))
 
         wf.close()
+
 
 def main():
     # create mesh object

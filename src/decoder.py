@@ -9,7 +9,6 @@ import math
 import struct
 import sys
 import numpy as np
-from stl import mesh
 from utils import _b
 from pprintpp import pprint as pp
 
@@ -274,16 +273,23 @@ class decoder():
 		# pp(nsPhi)
 
 		# The smaller of the two phi differences is for the "correct" pole
-		rotPhi = abs(mPhi - sPhi)
-		rotTheta = abs(mTheta - sTheta)
 
-		pp(mPhi)
-		pp(sPhi)
+		rotPhi = sPhi - mPhi
+		rotTheta = sTheta - mTheta
 
-		pp("-----")
+		if rotPhi < 0:
+		 	rotPhi = rotPhi + 90
 
-		pp(mTheta)
-		pp(sTheta)
+		if rotTheta < 0:
+		 	rotTheta = rotTheta + 90
+
+		#pp(mPhi)
+		#pp(sPhi)
+
+		#pp("-----")
+
+		#pp(mTheta)
+		#pp(sTheta)
 
 		# diffPhi2 = abs(mPhi - nsPhi)
 
@@ -325,42 +331,55 @@ class decoder():
     	#model =  int(str(output)[:2])
 		cls.mod = 1
     	#multi =  int(str(output)[2:4])
-		cls.multi = 5
+		cls.multi = 1
 
 	@classmethod
 	def readRot(cls):
         # read model offset from sphere
         # modelPhi, modelTheta = cls.findAngleDiffToAxes(model)
+		def toHEX(f):
+			if f<=10:
+				h=str(f-1)
+			if f>10:
+				h=chr(97+(f-11))
+			return h
 
 		model = cls.findPoleNormal(cls.mod)
 
-
         # read all of the cells
 		posvec = []
-		unhash = np.zeros([32,2])
+		unhash = ''
 		extra = 0
 		for x in range(1,33):
-			cell = ((cls.multi)*x) - 1 - extra
+			cell = ((cls.multi)*x) - extra
 			pos = cell % cls.numForms
 			while pos in posvec:
 				extra = extra + 1
-				cell = ((cls.multi)*x) - 1 + extra
+				cell = ((cls.multi)*x) + extra
 				pos = cell % cls.numForms
-			subject = cls.findPoleNormal(pos-1)
-			unhash[x-1] = cls.findAngleDiff(model,subject)
 			posvec.append(pos)
 
+			subject = cls.findPoleNormal(pos)
+			val = cls.findAngleDiff(model,subject)
+
+			val1 = toHEX(math.ceil(val[0]*16/90))
+			val2 = toHEX(math.ceil(val[1]*16/90))
+			unhash = unhash + val1
+			unhash = unhash + val2
+
+		pp(posvec)
+		if cls.mod in posvec:
+			x = 33
+			cell = ((cls.multi)*x) + extra
+			pos = cell % cls.numForms
+			subject = cls.findPoleNormal(pos)
+			val = cls.findAngleDiff(model,subject)
+			val1 = toHEX(math.ceil(val[0]*16/90))
+			print(val1)
+
 		pp(unhash)
+		pp(len(unhash))
 
-
-
-    # @classmethod
-    # def unhashRot(cls):
-	#
-    #     values = [123.4, 11.5, 99.1, 0.1]
-	#
-    #     for range(32):
-    #         digits = int(digits[0], 16)
 
 def plotForm(form, fig, ax):
 
