@@ -18,7 +18,7 @@ class insert():
 
     @classmethod
     def insertCode(cls):
-        cf = open('sphere.stl', 'rb')
+        cf = open('../stl/sphere.stl', 'rb')
 
         dtObj = np.dtype([
         		('normals', np.float32, (3,)),
@@ -31,7 +31,7 @@ class insert():
         code = np.fromfile(cf, dtype=dtObj, count=-1)
         cf.close()
 
-        pf = open('knob.stl', 'rb')
+        pf = open('../stl/knob.stl', 'rb')
 
         header =  np.fromfile(pf, dtype=np.uint8, count=HEADER_COUNT)
         partTriangles = np.fromfile(pf, dtype=np.uint32, count=1)
@@ -82,7 +82,7 @@ class insert():
         wf.close()
 
     @classmethod
-    def numpy11(cls):
+    def mergeSTL(cls):
         # find the max dimensions, so we can know the bounding box, getting the height,
         # width, length (because these are the step size)...
         def find_mins_maxs(obj):
@@ -172,7 +172,7 @@ class insert():
 
 def main():
     obj = insert()
-    obj.numpy11()
+    obj.mergeSTL()
 
 
 if __name__ == '__main__':
