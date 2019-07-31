@@ -41,7 +41,7 @@ class generator:
     @classmethod
     def readMatrix(cls):
         # read image
-        img = imread('../images/barcode.png')
+        img = imread('../images/barcode4.png')
         # takes data from one of the RGB channels
         img = img[:,:,0]
         # measure height of the matrix
@@ -89,7 +89,7 @@ class generator:
 
         a = np.array(cls.ResizeMTX)
         codedim = a.shape[1]
-        factor = 1.5#input("Fog Factor:")
+        factor = 2#input("Fog Factor:")
         cls.fogdim = math.ceil(factor*codedim)
 
         offset = math.sqrt(2) * codedim/2
