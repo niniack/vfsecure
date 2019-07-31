@@ -21,7 +21,7 @@ from utils import _b
 class generator:
 
     #dmgen vars
-    key = '0101'
+    key = '0404'
     hash = "beefe1dddd1f8ecc33e5b8f0b0a0ae737eff02a71b39c4c5ef4ebae8b794089b"
     # print(len(hash))
     ResizeMTX = None
@@ -217,10 +217,12 @@ class generator:
             i, p, d = s.partition('.')
             return '.'.join([i, (d+'0'*n)[:n]])
 
+
+        spec = 90
         cls.angles = []
         for a in range(len(cls.origins)):
-            rot1 = 90*random.random()
-            rot2 = 90*random.random()
+            rot1 = spec*random.random()
+            rot2 = spec*random.random()
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
             cls.angles.append([rot1, rot2])
@@ -228,14 +230,13 @@ class generator:
         model = int(str(cls.key)[:2])
         multi = int(str(cls.key)[2:4])
 
-        mr1 = 90*random.random()
-        mr2 = 90*random.random()
+        mr1 = spec*random.random()
+        mr2 = spec*random.random()
         mr1 = float(truncate(mr1, 5))
         mr2 = float(truncate(mr2, 5))
 
         posvec = []
         extra = 0
-        spec = 90
         for x in range(1,33):
             digits = cls.hash[2*(x-1):2*x]
             rot1 = (int(digits[0], 16) * spec/16 + random.random() * spec/16)
@@ -252,25 +253,15 @@ class generator:
             posvec.append(pos)
             cls.angles[pos][0] = rot11
             cls.angles[pos][1] = rot22
-            if x < 0 :
-                print(model,multi)
-                print(mr1,mr2)
-                print(digits)
-                print(rot1,rot2)
-                print(rot11,rot22)
-                print(extra)
-                print(pos)
 
         if model in posvec:
+            print('dncnopencepfnec')
             x = 33
             cell = ((multi)*x) + extra
             pos = cell % len(cls.origins)
-            # print(cls.angles[pos])
-            cls.angles[pos] = cls.angles[model-1]
-            # print(cls.angles[pos])
+            cls.angles[pos] = cls.angles[model]
 
-        cls.angles[model][0] = mr1
-        cls.angles[model][1] = mr2
+        cls.angles[model] = [mr1,mr2]
         print(posvec)
 
     @classmethod
