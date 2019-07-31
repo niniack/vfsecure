@@ -142,31 +142,31 @@ class insert():
             return copies
 
         # Using an existing stl file:
-        main_body = mesh.Mesh.from_file('../images/knob.stl')
+        main_body = mesh.Mesh.from_file('../stl/knob.stl')
         print(main_body)
 
         # rotate along Y
-        main_body.rotate([0.0, 0.5, 0.0], math.radians(90))
+        main_body.rotate([0, 0, 1], math.radians(90))
 
         minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(main_body)
         w1 = maxx - minx
         l1 = maxy - miny
         h1 = maxz - minz
-        copies = copy_obj(main_body, (w1, l1, h1), 2, 2, 1)
+
 
         # I wanted to add another related STL to the final STL
-        twist_lock = mesh.Mesh.from_file('ball_and_socket_simplified_-_twist_lock.stl')
+        twist_lock = mesh.Mesh.from_file('sphere.stl')
         minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(twist_lock)
         w2 = maxx - minx
         l2 = maxy - miny
         h2 = maxz - minz
-        translate(twist_lock, w1, w1 / 10., 3, 'x')
-        copies2 = copy_obj(twist_lock, (w2, l2, h2), 2, 2, 1)
-        combined = mesh.Mesh(numpy.concatenate([main_body.data, twist_lock.data] +
-                                            [copy.data for copy in copies] +
-                                            [copy.data for copy in copies2]))
+        translate(twist_lock, w1, w1 / 10., -1.5, 'x')
+        translate(twist_lock, w1, w1 / 10., -1.5, 'y')
+        translate(twist_lock, w1, w1 / 10., -1, 'z')
+        combined = mesh.Mesh(np.concatenate([main_body.data, twist_lock.data]))
 
-        combined.save('combined.stl', mode=stl.Mode.ASCII)  # save as ASCII
+
+        combined.save('combined1.stl', mode=stl.Mode.ASCII)  # save as ASCII
 
 
 
