@@ -2,8 +2,5 @@
 test.py
 out.stl
 trial.stl
-sphere.stl
-knob.stl
-merge.stl
 .DS_Store
 .__pycache__

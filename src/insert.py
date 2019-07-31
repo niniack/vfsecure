@@ -15,7 +15,7 @@ class insert():
 
     @classmethod
     def insertCode(cls):
-        cf = open('sphere.stl', 'rb')
+        cf = open('../stl/sphere.stl', 'rb')
 
         dtObj = np.dtype([
         		('normals', np.float32, (3,)),
@@ -28,7 +28,7 @@ class insert():
         code = np.fromfile(cf, dtype=dtObj, count=-1)
         cf.close()
 
-        pf = open('knob.stl', 'rb')
+        pf = open('../stl/knob.stl', 'rb')
 
         header =  np.fromfile(pf, dtype=np.uint8, count=HEADER_COUNT)
         partTriangles = np.fromfile(pf, dtype=np.uint32, count=1)
@@ -77,10 +77,6 @@ class insert():
 
 
         wf.close()
-
-
-
-
 
 def main():
     obj = insert()
