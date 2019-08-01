@@ -141,7 +141,7 @@ class decoder():
         # UINT16 – Attribute byte count
         # end
 
-		wf = open('out.stl', 'wb+')
+		wf = open('cleanedPart.stl', 'wb+')
 		wf.write(_b("\0"*80))
 
 		wf.write(_b(np.uint32(len(rows))))

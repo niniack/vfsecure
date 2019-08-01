@@ -54,7 +54,7 @@ class generator:
         encoded = encode(key.encode('utf8'), scheme='Ascii', size='10x10')
         cls.img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
         print(encoded)
-        cls.img.save('../images/genDMTX.png')
+        cls.img.save('../images/DMTX.png')
 
     @classmethod
     def readMatrix(cls):
@@ -374,7 +374,7 @@ class generator:
         #normalizing normals
         cls.normals =  cls.normals*(1/np.sqrt(np.add(cls.normals*cls.normals,1)))
 
-        wf = open('sphere.stl', 'wb+')
+        wf = open('../stl/FOGcode.stl', 'wb+')
         wf.write(_b("\0"*80))
 
         wf.write(_b(np.uint32(cls.numFaces*numSpheres)))

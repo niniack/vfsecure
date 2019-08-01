@@ -11,23 +11,23 @@ from pylibdmtx.pylibdmtx import decode
 import cv2
 
 
-# # Create a new plot
-# figure = pyplot.figure()
-# axes = mplot3d.Axes3D(figure, proj_type = 'ortho')
-#
-# # Load the STL files and add the vectors to the plot
-# your_mesh = mesh.Mesh.from_file('../stl/sphere.stl')
-# axes.add_collection3d(mplot3d.art3d.Poly3DCollection(your_mesh.vectors, facecolors='black', edgecolors='black'))
-#
-# # Auto scale to the mesh size
-# scale = your_mesh.points.flatten(-1)
-# axes.auto_scale_xyz(scale, scale, scale)
-#
-# axes.view_init(elev=90, azim=0)
-#
-# # Show the plot to the screen
-# # pyplot.show(figure)
-# figure.savefig('plot.png')
+# Create a new plot
+figure = pyplot.figure()
+axes = mplot3d.Axes3D(figure, proj_type = 'ortho')
 
-result = decode(cv2.imread('../images/genDMTX.png'))
+# Load the STL files and add the vectors to the plot
+your_mesh = mesh.Mesh.from_file('../stl/sphere.stl')
+axes.add_collection3d(mplot3d.art3d.Poly3DCollection(your_mesh.vectors, facecolors='black', edgecolors='black'))
+
+# Auto scale to the mesh size
+scale = your_mesh.points.flatten(-1)
+axes.auto_scale_xyz(scale, scale, scale)
+
+axes.view_init(elev=90, azim=0)
+
+# Show the plot to the screen
+# pyplot.show(figure)
+figure.savefig('../images/scannedSTL.png')
+
+result = decode(cv2.imread('../images/scannedSTL.png'))
 print(result)
