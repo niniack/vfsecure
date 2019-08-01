@@ -5,13 +5,16 @@
 
 
 from matplotlib.image import imread, imsave
+import argparse
 import numpy as np
 import operator
 import math
 import random
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-# from pylibdmtx.pylibdmtx import encode
+from pylibdmtx.pylibdmtx import encode
+from PIL import Image
+
 
 from pprintpp import pprint as pp
 
@@ -29,6 +32,7 @@ class generator:
     origins = None
     angles = None
     dt = None
+    img = None
 
     #genspheres vars
     faces=None
@@ -39,9 +43,16 @@ class generator:
     numVertices=None
 
     @classmethod
+    def genMatrix(cls, key):
+        encoded = encode(key.encode('utf8'), scheme='Ascii', size='10x10')
+        cls.img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
+        print(encoded)
+        cls.img.save('../images/genDMTX.png')
+
+    @classmethod
     def readMatrix(cls):
         # read image
-        img = imread('../images/barcode4.png')
+        img = imread('../images/barcode.png')
         # takes data from one of the RGB channels
         img = img[:,:,0]
         # measure height of the matrix
@@ -263,7 +274,6 @@ class generator:
             cls.angles[pos][1] = rot22
 
         if model in posvec:
-            print('dncnopencepfnec')
             x = 33
             cell = ((multi)*x) + extra
             pos = cell % len(cls.origins)
@@ -381,8 +391,16 @@ class generator:
 
 
 def main():
+
+    parser = argparse.ArgumentParser(description="QR Code Extractor")
+    parser.add_argument("key", help="Key to encode into 10x10 data matrix")
+    args = parser.parse_args()
+
     # create mesh object
     mesh = generator()
+
+    # generate DataMatrix
+    mesh.genMatrix(args.key)
     # reading matrix
     mesh.readMatrix()
     # x,y coordinates for matrix cells
@@ -422,8 +440,8 @@ def main():
     # write out STL file
     mesh.writeSTL()
 
-    # FOR DEBUGGING DECODER PURPOSES
-    np.savetxt("../legacy/angles.txt", mesh.angles)
+    # # FOR DEBUGGING DECODER PURPOSES
+    # np.savetxt("../legacy/angles.txt", mesh.angles)
 
 
 if __name__ == '__main__':
