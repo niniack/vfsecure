@@ -160,13 +160,13 @@ class insert():
         w2 = maxx - minx
         l2 = maxy - miny
         h2 = maxz - minz
-        translate(twist_lock, w1, w1 / 10., -1.5, 'x')
-        translate(twist_lock, w1, w1 / 10., -1.5, 'y')
-        translate(twist_lock, w1, w1 / 10., -1, 'z')
+        translate(twist_lock, w1, w1 / 10., -2.1, 'x')
+        translate(twist_lock, w1, w1 / 10., -1.25, 'y')
+        translate(twist_lock, w1, w1 / 10., -0.75, 'z')
         combined = mesh.Mesh(np.concatenate([main_body.data, twist_lock.data]))
 
 
-        combined.save('combined1.stl', mode=stl.Mode.ASCII)  # save as ASCII
+        combined.save('combined.stl', mode=stl.Mode.ASCII)  # save as ASCII
 
 
 

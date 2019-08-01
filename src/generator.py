@@ -257,8 +257,16 @@ class generator:
         extra = 0
         for x in range(1,33):
             digits = cls.hash[2*(x-1):2*x]
-            rot1 = (int(digits[0], 16) * spec/16 + random.random() * spec/16)
-            rot2 = (int(digits[1], 16) * spec/16 + random.random() * spec/16)
+            ran1 = random.random()
+            while ran1 > 0.95 or ran1 < 0.05:
+                ran1 = random.random()
+            ran2 = random.random()
+            while ran2 > 0.95 or ran2 < 0.05:
+                ran2 = random.random()
+
+            rot1 = (int(digits[0], 16) * spec/16 + ran1 * spec/16)
+            rot2 = (int(digits[1], 16) * spec/16 + ran2 * spec/16)
+            print(random.normalvariate(0.5, 0.1))
             rot11 = float(truncate(((mr1+rot1) % spec), 5))
             rot22 = float(truncate(((mr2+rot2) % spec), 5))
             cell = ((multi)*x) - extra
