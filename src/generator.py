@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 from pylibdmtx.pylibdmtx import encode
 from PIL import Image
 
+import random
+
 
 from pprintpp import pprint as pp
 
@@ -43,7 +45,12 @@ class generator:
     numVertices=None
 
     @classmethod
-    def genMatrix(cls, key):
+
+    def genKey(cls):
+        cls.key = random.randint(0,10000)
+        cls.key = "%04d" % key
+
+    def genMatrix(cls):
         encoded = encode(key.encode('utf8'), scheme='Ascii', size='10x10')
         cls.img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
         print(encoded)
@@ -384,15 +391,11 @@ class generator:
 
 def main():
 
-    parser = argparse.ArgumentParser(description="QR Code Extractor")
-    parser.add_argument("key", help="Key to encode into 10x10 data matrix")
-    args = parser.parse_args()
-
     # create mesh object
     mesh = generator()
 
     # generate DataMatrix
-    mesh.genMatrix(args.key)
+    mesh.genMatrix()
     # reading matrix
     mesh.readMatrix()
     # x,y coordinates for matrix cells
