@@ -10,10 +10,12 @@ import numpy as np
 import operator
 import math
 import random
+import hashlib
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from pylibdmtx.pylibdmtx import encode
 from PIL import Image
+import hashlib
 
 import random
 
@@ -26,8 +28,8 @@ from utils import _b
 class generator:
 
     #dmgen vars
-    key = '0404'
-    hash = "beefe1dddd1f8ecc33e5b8f0b0a0ae737eff02a71b39c4c5ef4ebae8b794089b"
+    key = None
+    hash = None
     # print(len(hash))
     ResizeMTX = None
     fogdim = None
@@ -45,15 +47,16 @@ class generator:
     numVertices=None
 
     @classmethod
-
     def genKey(cls):
         cls.key = random.randint(0,10000)
+
         cls.key = "%04d" % key
 
+    @classmethod
     def genMatrix(cls):
-        encoded = encode(key.encode('utf8'), scheme='Ascii', size='10x10')
+        encoded = encode(cls.key.encode('utf8'), scheme='Ascii', size='10x10')
         cls.img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
-        print(encoded)
+
         cls.img.save('../images/DMTX.png')
 
     @classmethod
@@ -102,12 +105,16 @@ class generator:
             col = 0
 
     @classmethod
+    def genHash(cls):
+        cls.hash = hashlib.sha256(b'../stl/FOGcode.stl')
+
+    @classmethod
     def CODExy(cls):
         cls.ResizeMTX
 
         a = np.array(cls.ResizeMTX)
         codedim = a.shape[1]
-        factor = 2#input("Fog Factor:")
+        factor = 1.42#input("Fog Factor:")
         cls.fogdim = math.ceil(factor*codedim)
 
         offset = math.sqrt(2) * codedim/2
@@ -266,7 +273,7 @@ class generator:
 
             rot1 = (int(digits[0], 16) * spec/16 + ran1 * spec/16)
             rot2 = (int(digits[1], 16) * spec/16 + ran2 * spec/16)
-            print(random.normalvariate(0.5, 0.1))
+
             rot11 = float(truncate(((mr1+rot1) % spec), 5))
             rot22 = float(truncate(((mr2+rot2) % spec), 5))
             cell = ((multi)*x) - extra
@@ -287,7 +294,6 @@ class generator:
             cls.angles[pos] = cls.angles[model]
 
         cls.angles[model] = [mr1,mr2]
-        print(posvec)
 
     @classmethod
     def readModel(cls):
@@ -396,12 +402,12 @@ class generator:
 
         wf.close()
 
-
 def main():
 
     # create mesh object
     mesh = generator()
-
+    # generate DataMatrix
+    mesh.genKey()
     # generate DataMatrix
     mesh.genMatrix()
     # reading matrix
@@ -445,7 +451,6 @@ def main():
 
     # # FOR DEBUGGING DECODER PURPOSES
     # np.savetxt("../legacy/angles.txt", mesh.angles)
-
 
 if __name__ == '__main__':
     main()
