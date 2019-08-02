@@ -9,12 +9,15 @@ import numpy as np
 import math
 import stl
 from stl import mesh
+from mpl_toolkits import mplot3d
+from matplotlib import pyplot
 
 HEADER_COUNT = 80
 
 class insert():
     code=None
     part=None
+    offset = [45,45]
 
     @classmethod
     def insertCode(cls):
@@ -82,7 +85,7 @@ class insert():
         wf.close()
 
     @classmethod
-    def mergeSTL(cls):
+    def mergeSTL(cls,x,y,z):
         # find the max dimensions, so we can know the bounding box, getting the height,
         # width, length (because these are the step size)...
         def find_mins_maxs(obj):
@@ -119,60 +122,72 @@ class insert():
             # _solid.points.shape == [:, ((x, y, z), (x, y, z), (x, y, z))]
             _solid.points[:, items] += (step * multiplier) + (padding * multiplier)
 
-
-        def copy_obj(obj, dims, num_rows, num_cols, num_layers):
-            w, l, h = dims
-            copies = []
-            for layer in range(num_layers):
-                for row in range(num_rows):
-                    for col in range(num_cols):
-                        # skip the position where original being copied is
-                        if row == 0 and col == 0 and layer == 0:
-                            continue
-                        _copy = mesh.Mesh(obj.data.copy())
-                        # pad the space between objects by 10% of the dimension being
-                        # translated
-                        if col != 0:
-                            translate(_copy, w, w / 10., col, 'x')
-                        if row != 0:
-                            translate(_copy, l, l / 10., row, 'y')
-                        if layer != 0:
-                            translate(_copy, h, h / 10., layer, 'z')
-                        copies.append(_copy)
-            return copies
-
         # Using an existing stl file:
         main_body = mesh.Mesh.from_file('../stl/knob.stl')
         print(main_body)
 
-        # rotate along Y
-        main_body.rotate([0, 0, 1], math.radians(90))
-
         minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(main_body)
-        w1 = maxx - minx
-        l1 = maxy - miny
-        h1 = maxz - minz
+        w1 = x*(maxx - minx)
+        l1 = y*(maxy - miny)
+        h1 = z*(maxz - minz)
 
 
         # I wanted to add another related STL to the final STL
-        twist_lock = mesh.Mesh.from_file('sphere.stl')
-        minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(twist_lock)
+        code_body = mesh.Mesh.from_file('../stl/FOGcode.stl')
+        minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
+        code_body.rotate([1,0,0],math.radians(cls.offset[0]))
+        code_body.rotate([0,0,1],math.radians(cls.offset[1]))
+
         w2 = maxx - minx
         l2 = maxy - miny
         h2 = maxz - minz
-        translate(twist_lock, w1, w1 / 10., -2.1, 'x')
-        translate(twist_lock, w1, w1 / 10., -1.25, 'y')
-        translate(twist_lock, w1, w1 / 10., -0.75, 'z')
-        combined = mesh.Mesh(np.concatenate([main_body.data, twist_lock.data]))
+
+        translate(code_body, w1, w1 / 10., -1, 'x')
+        translate(code_body, l1, l1 / 10., -1, 'y')
+        translate(code_body, h1, h1 / 10., 1, 'z')
+        combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]))
 
 
-        combined.save('combined.stl', mode=stl.Mode.ASCII)  # save as ASCII
+        combined.save('../stl/combined.stl', mode=stl.Mode.ASCII)  # save as ASCII
 
+        figure = pyplot.figure()
+        axes = mplot3d.Axes3D(figure)
+
+        # Load the STL files and add the vectors to the plot
+
+        axes.add_collection3d(mplot3d.art3d.Poly3DCollection(combined.vectors))
+
+        # Auto scale to the mesh size
+        scale = combined.points.flatten(-1)
+        axes.auto_scale_xyz(scale, scale, scale)
+        axes.view_init(elev=90, azim=90)
+        axes.set_proj_type('ortho')
+        axes.set_xlabel('X axis')
+        axes.set_ylabel('Y axis')
+        axes.set_zlabel('Z axis')
+
+        # Show the plot to the screen
+        pyplot.show()
 
 
 def main():
     obj = insert()
-    obj.mergeSTL()
+    user = False
+    x = 0
+    y = 0
+    z = 0
+    while not user:
+        obj.mergeSTL(x,y,z)
+        user = int(input('Is there correct placement...  '))
+        if not user:
+            dir = int(input('What direction x=1, y=2, z=3...  '))
+            if dir == 1:
+                x=float(input("How far in the x direction"))
+            if dir == 2:
+                y=float(input("How far in the y direction"))
+            if dir == 3:
+                z=float(input("How far in the z direction"))
+
 
 
 if __name__ == '__main__':

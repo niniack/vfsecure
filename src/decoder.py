@@ -25,16 +25,17 @@ ATTR_COUNT = 1
 
 class decoder():
 
-	numTriangles=None
-	filename=None
-	normals=None
-	vertices=None
-	mem=None
-	attrs=None
-	size=None
+	numTriangles = None
+	filename = None
+	normals = None
+	vertices = None
+	mem = None
+	attrs = None
+	size = None
 	model = None
-	numForms=0
-	multi=None
+	numForms = 0
+	multi = None
+	unhash = None
 
 	@classmethod
 	def readSTL(cls, filename):
@@ -199,30 +200,18 @@ class decoder():
 
 		return(poleVertexNormal)
 
-
-
 		# origins = findCircumcenter(poleFaces, 14)
 		# plotNormals(origins, poleFaceNormals, 14)
-
-
 		# fig = plt.figure()
 		# ax = fig.gca(projection='3d')
-
-
 		# xdata = np.zeros(int(points.size/3))
 		# ydata = np.zeros(int(points.size/3))
 		# zdata = np.zeros(int(points.size/3))
-		#
-		#
-		#
 		# for j in range(int(points.size/3)):
 		# 	xdata[j] = points[j][0]
 		# 	ydata[j] = points[j][1]
-		# 	zdata[j] = points[j][2]
-		#
-		#
+		#   zdata[j] = points[j][2]
 		# ax.scatter(xdata, ydata, zdata, c=zdata)
-
 
 	@classmethod
 	def _findPole(cls, vertices):
@@ -348,7 +337,7 @@ class decoder():
 
         # read all of the cells
 		posvec = []
-		unhash = ''
+		cls.unhash = ''
 		extra = 0
 
 		for x in range(1,33):
@@ -359,14 +348,12 @@ class decoder():
 				cell = ((cls.multi)*x) + extra
 				pos = cell % cls.numForms
 			posvec.append(pos)
-		print(posvec)
 
 		if cls.mod in posvec:
 			x = 33
 			cell = ((cls.multi)*x) + extra
 			pos = cell % cls.numForms
 			posvec[(cls.mod in posvec)-1]=pos
-		print(posvec)
 
 		for y in range(len(posvec)):
 			pos = posvec[y]
@@ -374,15 +361,21 @@ class decoder():
 			val = cls.findAngleDiff(model,subject)
 			val1 = toHEX(math.ceil(val[0]*16/90))
 			val2 = toHEX(math.ceil(val[1]*16/90))
-			unhash = unhash + val1
-			unhash = unhash + val2
+			cls.unhash = cls.unhash + val1
+			cls.unhash = cls.unhash + val2
+
+	@classmethod
+    def genHash(cls):
+        cls.hash = hashlib.sha256(b'../stl/FOGcode.stl')
+
+	@classmethod
+    def compHash(cls):
+		if cls.unhash == cls.hash:
+			print('Authentic Orginal Part!')
+		else
+			print('Phoney Part')
 
 
-
-		pp(unhash)
-		pp(len(unhash))
-
-		hash = "beefe1dddd1f8ecc33e5b8f0b0a0ae737eff02a71b39c4c5ef4ebae8b794089b"
 def plotForm(form, fig, ax):
 
 	xdata = []
