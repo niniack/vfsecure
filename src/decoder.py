@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
-# decoder.py v1 - Python script to extract separate entities from each other in an STL file
-# by Nishant Aswani @niniack
+# decoder.py v1 - Python script to separate entities from each other in an STL file
+# by Nishant Aswani @niniack and Michael Linares @michaellinares
 # Composite Materials and Mechanics Laboratory, Copyright 2019
 
 import argparse
@@ -12,11 +12,13 @@ import numpy as np
 from utils import _b
 from pprintpp import pprint as pp
 
+from stl import mesh
+
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 import matplotlib.pyplot as plt
 
-from itertools import chain
-from collections import Counter
+# from itertools import chain
+# from collections import Counter
 
 HEADER_COUNT = 80
 TRI_BYTE_COUNT = 4
@@ -35,6 +37,12 @@ class decoder():
 	model = None
 	numForms=0
 	multi=None
+
+	Mesh=None
+
+	volumeTag=0
+	largestVolume=0
+
 
 	@classmethod
 	def readSTL(cls, filename):
@@ -55,7 +63,7 @@ class decoder():
 	def readBinary(cls,filename):
 
 		# Create data object to store values
-		dtObj = np.dtype([
+		cls.dtObj = np.dtype([
         		('normals', np.float32, (3,)),
         		('vertices', np.float32, (3, 3)),
         		('attrs', np.uint16, (1,))
@@ -68,14 +76,14 @@ class decoder():
 		# Read number of triangles
 		cls.numTriangles = np.fromfile(df, dtype=np.uint32, count=1)
 		# Read remainder of data
-		mesh = np.fromfile(df, dtype=dtObj, count=-1)
+		cls.Mesh = np.fromfile(df, dtype=cls.dtObj, count=-1)
 
 		df.close()
 
 		# Save data to class variables
-		cls.normals = mesh['normals']
-		cls.vertices = mesh['vertices']
-		cls.attr = mesh['attrs']
+		cls.normals = cls.Mesh['normals']
+		cls.vertices = cls.Mesh['vertices']
+		cls.attr = cls.Mesh['attrs']
 
 		# New array with vertex data and extra col to assign form number
 		cls.mem = cls.vertices
@@ -96,9 +104,26 @@ class decoder():
 				form = cls._formDefiner(model, form, formTag)
 			i += 1
 
+		cls._findVolume(formTag)
 		cls.numForms += 1
 		pp(cls.numForms)
 		return form
+
+	@classmethod
+	def _findVolume(cls, tag):
+		rows, cols = np.where(cls.mem[:,:,3] == tag)
+		rows = list(set(rows.tolist()))
+
+		formMesh = np.zeros(len(rows), dtype=mesh.Mesh.dtype)
+		for i in range(len(rows)):
+			formMesh[i] = cls.Mesh[rows[i]]
+
+		formMesh = mesh.Mesh(formMesh)
+		volume, cog, inertia = formMesh.get_mass_properties()
+
+		if volume > cls.largestVolume:
+			cls.largestVolume = volume
+			cls.volumeTag = tag
 
 	@classmethod
 	def _formDefiner(cls, model, form, tag):
@@ -122,6 +147,7 @@ class decoder():
 
 		return formExist
 
+	# Use tag to extract values WITH that tag
 	@classmethod
 	def extractForm(cls, tag):
 		rows, cols = np.where(cls.mem[:,:,3] == tag)
@@ -141,7 +167,7 @@ class decoder():
         # UINT16 – Attribute byte count
         # end
 
-		wf = open('cleanedPart.stl', 'wb+')
+		wf = open('../stl/cleanedPart.stl', 'wb+')
 		wf.write(_b("\0"*80))
 
 		wf.write(_b(np.uint32(len(rows))))
@@ -159,6 +185,33 @@ class decoder():
 			wf.write(_b(np.uint16(0)))
 
 		wf.close()
+
+	# Use tag to extract values WITHOUT that tag
+	@classmethod
+	def extractCode(cls, tag):
+		rows, cols = np.where(cls.mem[:,:,3] != tag)
+		rows = list(set(rows.tolist()))
+
+		wf = open('../stl/extractedCode.stl', 'wb+')
+		wf.write(_b("\0"*80))
+
+		wf.write(_b(np.uint32(len(rows))))
+
+		for i in range(int(len(rows))):
+			wf.write(_b(np.float32(cls.normals[rows[i]][0])))
+			wf.write(_b(np.float32(cls.normals[rows[i]][1])))
+			wf.write(_b(np.float32(cls.normals[rows[i]][2])))
+
+			for j in range(3):
+				wf.write(_b(np.float32(cls.vertices[rows[i]][j][0])))
+				wf.write(_b(np.float32(cls.vertices[rows[i]][j][1])))
+				wf.write(_b(np.float32(cls.vertices[rows[i]][j][2])))
+
+			wf.write(_b(np.uint16(0)))
+
+		wf.close()
+
+
 
 	@classmethod
 	def findPoleNormal(cls, modelTag):
@@ -407,37 +460,39 @@ def main():
 	    print ("File", args.filename, "does not exist.")
 	    sys.exit(1)
 
-	mesh = decoder()
-	mesh.readSTL(args.filename)
+	object= decoder()
+	object.readSTL(args.filename)
 
 	# fig = plt.figure()
 	# ax = fig.gca(projection='3d')
 
 	formTag = 0
 	print("Finding forms...")
-	for rowloc in range(int(mesh.numTriangles)): #mesh.numTriangles
-		formExist = mesh.checkForm(rowloc)
+	for rowloc in range(int(object.numTriangles)): #object.numTriangles
+		formExist = object.checkForm(rowloc)
 		if (formExist == False):
-			form = mesh.findForm(rowloc, formTag)
+			form = object.findForm(rowloc, formTag)
 			formTag += 1
-		# if(mesh.numForms > 20):
+		# if(object.numForms > 1):
 		# 	break
+
 			# plotForm(form, fig, ax)
-	# mesh.extractForm(20)
+
+	object.extractCode(object.volumeTag)
 
 
 
 	########## DON'T DELETE ##################
-	# model = mesh.findPoleNormal(cls.model)
-	# subject = mesh.findPoleNormal(146)
+	# model = object.findPoleNormal(cls.model)
+	# subject = object.findPoleNormal(146)
 	#
 	# rotAngles = np.zeros()
 	#
-	# #rotPhi, rotTheta = mesh.findAngleDiff(model,subject)
-	# modelPhi, modelTheta = mesh.findAngleDiffToAxes(model)
+	# #rotPhi, rotTheta = object.findAngleDiff(model,subject)
+	# modelPhi, modelTheta = object.findAngleDiffToAxes(model)
 
-	mesh.readDMX()
-	mesh.readRot()
+	# object.readDMX()
+	# object.readRot()
 
 	# pp("rotPhi: " + str(rotPhi))
 	# pp("rotTheta: " + str(rotTheta))

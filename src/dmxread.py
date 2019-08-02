@@ -16,14 +16,15 @@ figure = pyplot.figure()
 axes = mplot3d.Axes3D(figure, proj_type = 'ortho')
 
 # Load the STL files and add the vectors to the plot
-your_mesh = mesh.Mesh.from_file('../stl/sphere.stl')
+your_mesh = mesh.Mesh.from_file('../stl/extractedCode.stl')
 axes.add_collection3d(mplot3d.art3d.Poly3DCollection(your_mesh.vectors, facecolors='black', edgecolors='black'))
 
 # Auto scale to the mesh size
 scale = your_mesh.points.flatten(-1)
 axes.auto_scale_xyz(scale, scale, scale)
+# axes.autoscale()
 
-axes.view_init(elev=90, azim=0)
+axes.view_init(elev=45, azim=45)
 
 # Show the plot to the screen
 # pyplot.show(figure)
