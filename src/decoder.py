@@ -418,14 +418,14 @@ class decoder():
 			cls.unhash = cls.unhash + val2
 
 	@classmethod
-    def genHash(cls):
-        cls.hash = hashlib.sha256(b'../stl/FOGcode.stl')
+	def genHash(cls):
+		cls.hash = hashlib.sha256(b'../stl/FOGcode.stl')
 
 	@classmethod
-    def compHash(cls):
+	def compHash(cls):
 		if cls.unhash == cls.hash:
 			print('Authentic Orginal Part!')
-		else
+		else:
 			print('Phoney Part')
 
 

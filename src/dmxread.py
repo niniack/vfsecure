@@ -24,7 +24,7 @@ scale = your_mesh.points.flatten(-1)
 axes.auto_scale_xyz(scale, scale, scale)
 # axes.autoscale()
 
-axes.view_init(elev=45, azim=45)
+axes.view_init(elev=55, azim=37)
 
 # Show the plot to the screen
 # pyplot.show(figure)
