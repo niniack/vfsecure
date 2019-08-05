@@ -15,8 +15,11 @@ from matplotlib import pyplot
 HEADER_COUNT = 80
 
 class insert():
-    code=None
-    part=None
+    code = None
+    part = None
+    combined = None
+    newOrigin = [0,0,0]
+    dispData = [0,0,0]
     offset = [0,0]
     #
     # @classmethod
@@ -85,7 +88,7 @@ class insert():
     #     wf.close()
 
     @classmethod
-    def mergeSTL(cls,x,y,z):
+    def mergeSTL(cls,final):
         # find the max dimensions, so we can know the bounding box, getting the height,
         # width, length (because these are the step size)...
         def find_mins_maxs(obj):
@@ -107,6 +110,7 @@ class insert():
                     maxz = max(p[stl.Dimension.Z], maxz)
                     minz = min(p[stl.Dimension.Z], minz)
             return minx, maxx, miny, maxy, minz, maxz
+
         def translate(_solid, step, padding, multiplier, axis):
             if 'x' == axis:
                 items = 0, 3, 6
@@ -116,7 +120,6 @@ class insert():
                 items = 2, 5, 8
             else:
                 raise RuntimeError('Unknown axis %r, expected x, y or z' % axis)
-
             # _solid.points.shape == [:, ((x, y, z), (x, y, z), (x, y, z))]
             _solid.points[:, items] += (step * multiplier) + (padding * multiplier)
 
@@ -127,47 +130,46 @@ class insert():
         minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
         code_body.rotate([1,0,0],math.radians(cls.offset[0]))
         code_body.rotate([0,0,1],math.radians(cls.offset[1]))
-        print("---------------------------------------")
 
 
-        w2 = maxx - minx
-        l2 = maxy - miny
-        h2 = maxz - minz
-        #translate(code_body, w2, w2 / 10., -1, 'x')
-        #translate(code_body, l2, l2 / 10., -1, 'y')
-        #translate(code_body, h2, h2 / 10., -1, 'z')
+        if final:
+            translate(code_body, cls.newOrigin[0], cls.newOrigin[0] / 10., 1, 'x')
+            translate(code_body, cls.newOrigin[1], cls.newOrigin[1] / 10., 1, 'y')
+            translate(code_body, cls.newOrigin[2], cls.newOrigin[2] / 10., 1, 'z')
+            print('Hey')
+
         minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
-        w1 = maxx - minx
-        l1 = maxy - miny
-        h1 = maxz - minz
-
-        combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]))
+        cls.dispData[0] = maxx - minx
+        cls.dispData[1] = maxy - miny
+        cls.dispData[2] = maxz - minz
 
 
-        combined.save('../stl/combined.stl', mode=stl.Mode.BINARY)  # save as ASCII
+        cls.combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]))
+
+        cls.combined.save('../stl/combined.stl', mode=stl.Mode.BINARY)  # save as ASCII
+
+    @classmethod
+    def codeplacementGUI(cls):
 
         def genView(ang1,ang2,x0,y0,z0):
             figure = pyplot.figure()
             axes = mplot3d.Axes3D(figure)
 
-
             fig = pyplot.figure()
             axes = fig.add_subplot(111, projection='3d')
             u = np.linspace(0, 2 * np.pi, 100)
             v = np.linspace(0, np.pi, 100)
-            x = (maxx-minx)/1.8 * np.outer(np.cos(u), np.sin(v))
-            y = (maxy-miny)/1.8 * np.outer(np.sin(u), np.sin(v))
-            z = (maxz-minz)/1.8 * np.outer(np.ones(np.size(u)), np.cos(v))
-            axes.plot_surface(x+w1/2+x0, y+l1/2+y0, z+h1/2+z0,  rstride=4, cstride=4, color='r')
-            print()
+            x = cls.dispData[0]/1.8 * np.outer(np.cos(u), np.sin(v))
+            y = cls.dispData[1]/1.8 * np.outer(np.sin(u), np.sin(v))
+            z = cls.dispData[2]/1.8 * np.outer(np.ones(np.size(u)), np.cos(v))
+            axes.plot_surface(x+cls.dispData[0]/2+x0, y+cls.dispData[1]/2+y0, z+cls.dispData[2]/2+z0,  rstride=4, cstride=4, color='r')
+
             # Load the STL files and add the vectors to the plot
 
-            axes.add_collection3d(mplot3d.art3d.Poly3DCollection(combined.vectors))
-
-
+            axes.add_collection3d(mplot3d.art3d.Poly3DCollection(cls.combined.vectors))
 
             # Auto scale to the mesh size
-            scale = combined.points.flatten(-1)
+            scale = cls.combined.points.flatten(-1)
             axes.auto_scale_xyz(scale, scale, scale)
             axes.view_init(elev=ang1, azim=ang2)
             axes.set_proj_type('ortho')
@@ -178,71 +180,40 @@ class insert():
             # Show the plot to the screen
             pyplot.show(figure)
 
-
-        newOrigin=np.zeros(3)
+        cls.newOrigin=np.zeros(3)
         x=0
         y=0
         z=0
-        genView(90,90,x,y,z)
+
         clicks = 1
         while not clicks == 0:
              genView(90,90,x,y,z)
              clicks = float(input('Move how far in the x directon...'))
              x = x + clicks
-        newOrigin[0]=x
-        #
-        # x=-0.001
-        # y=0.034
-        #
-        # genView(0,0,x,y)
-        # clicks = 1
-        # while not clicks == 0:
-        #     genView(0,0,x,y)
-        #     clicks = float(input('Move how far in the y directon...'))
-        #     x = x + clicks * 0.005
-        #     yclicks = yclicks+clicks
-        #
-        #
-        # genView(0,90,x,y)
-        # clicks = 1
-        # while not clicks == 0:
-        #     genView(0,90,x,y)
-        #     clicks = float(input('Move how far in the z directon...'))
-        #     x = x + clicks * 0.005
-        #     zclicks = zclicks+clicks
+        cls.newOrigin[0]=x
 
-        #user = int(input('Move how far in the x directon...'))
-        #while user:
+        clicks = 1
+        while not clicks == 0:
+            genView(0,0,x,y,z)
+            clicks = float(input('Move how far in the y directon...'))
+            y = y + clicks
+        cls.newOrigin[1]=y
 
-            #genView(90,90,x,y)
-            #user = int(input('Move how far in the x directon...'))
-
-
-
-        #genView(90,0,x,y)
-
-        #genView(0,90,x,y)
+        clicks = 1
+        while not clicks == 0:
+            genView(0,90,x,y,z)
+            clicks = float(input('Move how far in the z directon...'))
+            x = x + clicks
+        cls.newOrigin[2]=z
 
 
 def main():
     obj = insert()
-    user = False
-    x = 1
-    y = 1
-    z = 1
-    while not user:
-        obj.mergeSTL(x,y,z)
-
-        user = True#int(input('Is there correct placement...  '))
-        if not user:
-            dir = int(input('What direction x=1, y=2, z=3...  '))
-            if dir == 1:
-                x=float(input("How far in the x direction"))
-            if dir == 2:
-                y=float(input("How far in the y direction"))
-            if dir == 3:
-                z=float(input("How far in the z direction"))
-
+    final=False
+    obj.mergeSTL(final)
+    obj.codeplacementGUI()
+    final=True
+    obj.mergeSTL(final)
 
 
 if __name__ == '__main__':
