@@ -8,11 +8,15 @@ from matplotlib.image import imread, imsave
 import argparse
 import numpy as np
 import operator
+from utils import _b
 import math
 import random
 import hashlib
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
+import stl
+from stl import mesh
+from mpl_toolkits import mplot3d
+#from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot
 from pylibdmtx.pylibdmtx import encode
 from PIL import Image
 import hashlib
@@ -46,6 +50,14 @@ class generator:
     shiftedVertices=None
     numFaces=None
     numVertices=None
+
+    #insert vars
+    code = None
+    part = None
+    combined = None
+    newOrigin = [0,0,0]
+    dispData = [0,0,0]
+    offset = [96,69]
 
     @classmethod
     def genKey(cls):
@@ -82,7 +94,6 @@ class generator:
         # Write shuffled STL file of part (from utils)
         _standardWriteSTL(filename=filename, numTri=numTri, normals=part['normals'], vertices=part['vertices'])
 
-
     @classmethod
     def genMatrix(cls):
         encoded = encode(cls.key.encode('utf8'), scheme='Ascii', size='10x10')
@@ -93,7 +104,7 @@ class generator:
     @classmethod
     def readMatrix(cls):
         # read image
-        img = imread('../images/barcode.png')
+        img = imread('../images/DMTX.png')
         # takes data from one of the RGB channels
         img = img[:,:,0]
         # measure height of the matrix
@@ -320,7 +331,7 @@ class generator:
             cls.angles[pos][1] = rot22
 
         model = model % len(cls.origins)
-        
+
         if model in posvec:
             x = 33
             cell = ((multi)*x) + extra
@@ -435,6 +446,126 @@ class generator:
 
         wf.close()
 
+    @classmethod
+    def mergeSTL(cls,final):
+        # find the max dimensions, so we can know the bounding box, getting the height,
+        # width, length (because these are the step size)...
+        def find_mins_maxs(obj):
+            minx = maxx = miny = maxy = minz = maxz = None
+            for p in obj.points:
+                # p contains (x, y, z)
+                if minx is None:
+                    minx = p[stl.Dimension.X]
+                    maxx = p[stl.Dimension.X]
+                    miny = p[stl.Dimension.Y]
+                    maxy = p[stl.Dimension.Y]
+                    minz = p[stl.Dimension.Z]
+                    maxz = p[stl.Dimension.Z]
+                else:
+                    maxx = max(p[stl.Dimension.X], maxx)
+                    minx = min(p[stl.Dimension.X], minx)
+                    maxy = max(p[stl.Dimension.Y], maxy)
+                    miny = min(p[stl.Dimension.Y], miny)
+                    maxz = max(p[stl.Dimension.Z], maxz)
+                    minz = min(p[stl.Dimension.Z], minz)
+            return minx, maxx, miny, maxy, minz, maxz
+
+        def translate(_solid, step, padding, multiplier, axis):
+            if 'x' == axis:
+                items = 0, 3, 6
+            elif 'y' == axis:
+                items = 1, 4, 7
+            elif 'z' == axis:
+                items = 2, 5, 8
+            else:
+                raise RuntimeError('Unknown axis %r, expected x, y or z' % axis)
+            # _solid.points.shape == [:, ((x, y, z), (x, y, z), (x, y, z))]
+            _solid.points[:, items] += (step * multiplier) + (padding * multiplier)
+
+        # Using an existing stl file:
+        main_body = mesh.Mesh.from_file('../stl/pomo.stl')
+        # I wanted to add another related STL to the final STL
+        code_body = mesh.Mesh.from_file('../stl/FOGcode.stl')
+        minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
+        code_body.rotate([1,0,0],math.radians(cls.offset[0]))
+        code_body.rotate([0,0,1],math.radians(cls.offset[1]))
+
+
+        if final:
+            translate(code_body, cls.newOrigin[0], cls.newOrigin[0] / 10., 1, 'x')
+            translate(code_body, cls.newOrigin[1], cls.newOrigin[1] / 10., 1, 'y')
+            translate(code_body, cls.newOrigin[2], cls.newOrigin[2] / 10., 1, 'z')
+            print('Hey')
+
+        minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
+        cls.dispData[0] = maxx - minx
+        cls.dispData[1] = maxy - miny
+        cls.dispData[2] = maxz - minz
+
+
+        cls.combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]))
+
+        cls.combined.save('../stl/combined.stl', mode=stl.Mode.BINARY)  # save as ASCII
+
+    @classmethod
+    def codeplacementGUI(cls):
+
+        def genView(ang1,ang2,x0,y0,z0):
+            figure = pyplot.figure()
+            axes = mplot3d.Axes3D(figure)
+
+            fig = pyplot.figure()
+            axes = fig.add_subplot(111, projection='3d')
+            u = np.linspace(0, 2 * np.pi, 100)
+            v = np.linspace(0, np.pi, 100)
+            x = cls.dispData[0]/1.8 * np.outer(np.cos(u), np.sin(v))
+            y = cls.dispData[1]/1.8 * np.outer(np.sin(u), np.sin(v))
+            z = cls.dispData[2]/1.8 * np.outer(np.ones(np.size(u)), np.cos(v))
+            axes.plot_surface(x+cls.dispData[0]/2+x0, y+cls.dispData[1]/2+y0, z+cls.dispData[2]/2+z0,  rstride=4, cstride=4, color='r')
+
+            # Load the STL files and add the vectors to the plot
+
+            axes.add_collection3d(mplot3d.art3d.Poly3DCollection(cls.combined.vectors))
+
+            # Auto scale to the mesh size
+            scale = cls.combined.points.flatten(-1)
+            axes.auto_scale_xyz(scale, scale, scale)
+            axes.view_init(elev=ang1, azim=ang2)
+            axes.set_proj_type('ortho')
+            axes.set_xlabel('X axis')
+            axes.set_ylabel('Y axis')
+            axes.set_zlabel('Z axis')
+
+            # Show the plot to the screen
+            pyplot.show(figure)
+
+        cls.newOrigin=np.zeros(3)
+        x=0
+        y=0
+        z=0
+
+        clicks = 1
+        while not clicks == 0:
+             genView(90,90,x,y,z)
+             clicks = float(input('Move how far in the x directon...'))
+             x = x + clicks
+        cls.newOrigin[0]=x
+
+        clicks = 1
+        while not clicks == 0:
+            genView(0,0,x,y,z)
+            clicks = float(input('Move how far in the y directon...'))
+            y = y + clicks
+        cls.newOrigin[1]=y
+
+        clicks = 1
+        while not clicks == 0:
+            genView(0,90,x,y,z)
+            clicks = float(input('Move how far in the z directon...'))
+            x = x + clicks
+        cls.newOrigin[2]=z
+
+
 def main():
 
     # create mesh object
@@ -442,11 +573,11 @@ def main():
     # generate key
     mesh.genKey()
     # shuffle the inputted part
-    mesh.shufflePart(filename='../stl/knob.stl')
+    mesh.shufflePart(filename='../stl/pomo.stl')
     # generate hash from shuffled part
     mesh.genHash()
     # generate DataMatrix
-    mesh.genMatrix()
+    #mesh.genMatrix()
     # reading matrix
     mesh.readMatrix()
     # x,y coordinates for matrix cells
@@ -482,6 +613,11 @@ def main():
     # write out STL file
     mesh.writeSTL()
 
+    final=False
+    mesh.mergeSTL(final)
+    mesh.codeplacementGUI()
+    final=True
+    mesh.mergeSTL(final)
     # # FOR DEBUGGING DECODER PURPOSES
     # np.savetxt("../legacy/angles.txt", mesh.angles)
 
