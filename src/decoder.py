@@ -14,8 +14,15 @@ from pprintpp import pprint as pp
 
 from stl import mesh
 
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
+# from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 import matplotlib.pyplot as plt
+
+from mpl_toolkits import mplot3d
+from matplotlib import pyplot
+
+
+from pylibdmtx.pylibdmtx import decode
+import cv2
 
 # from itertools import chain
 # from collections import Counter
@@ -370,10 +377,36 @@ class decoder():
 
 	@classmethod
 	def readDMX(cls):
-    	#model =  int(str(output)[:2])
-		cls.mod = 4
-    	#multi =  int(str(output)[2:4])
-		cls.multi = 4
+    	offset = [37,55]
+
+		# Create a new plot
+		figure = pyplot.figure()
+		axes = mplot3d.Axes3D(figure, proj_type = 'ortho')
+
+		# Load the STL files and add the vectors to the plot
+		extractedCode = mesh.Mesh.from_file('../stl/extractedCode.stl')
+
+		extractedCode.rotate([0,0,1],math.radians(-offset[1]))
+		extractedCode.rotate([1,0,0],math.radians(-offset[0]))
+
+
+		axes.add_collection3d(mplot3d.art3d.Poly3DCollection(extractedCode.vectors, facecolors='black', edgecolors='black'))
+
+		# Auto scale to the mesh size
+		scale = extractedCode.points.flatten(-1)
+		axes.auto_scale_xyz(scale, scale, scale)
+		# axes.autoscale()
+
+		axes.view_init(elev=90, azim=0)
+
+		# Show the plot to the screen
+		# pyplot.show(figure)
+		figure.savefig('../images/scannedSTL.png')
+
+		result = str(decode(cv2.imread('../images/scannedSTL.png'))[0][0])
+		result = re.findall("\d{2}",result)
+		cls.mod = int(result[0])
+		cls.multi = int(result[1])
 
 	@classmethod
 	def readRot(cls):
@@ -404,7 +437,7 @@ class decoder():
 
 
 		cls.mod = cls.mod %cls.numForms
-		
+
 		if cls.mod in posvec:
 			x = 33
 			cell = ((cls.multi)*x) + extra

@@ -12,6 +12,8 @@ import math
 from pylibdmtx.pylibdmtx import decode
 import cv2
 
+import re
+
 offset = [37,55]
 
 # Create a new plot
@@ -38,5 +40,7 @@ axes.view_init(elev=90, azim=0)
 # pyplot.show(figure)
 figure.savefig('../images/scannedSTL.png')
 
-result = decode(cv2.imread('../images/scannedSTL.png'))
-print(result)
+result = str(decode(cv2.imread('../images/genDMTX.png'))[0][0])
+result = re.findall("\d{2}",result)
+mod = int(result[0])
+multi = int(result[1])
