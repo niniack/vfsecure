@@ -4,3 +4,8 @@ out.stl
 trial.stl
 .DS_Store
 .__pycache__
+.combined.stl
+.FOGcode.stl
+.shuffledPart.stl
+.DMTX.png
+.scannedSTL.png
