@@ -402,6 +402,9 @@ class decoder():
 				pos = cell % cls.numForms
 			posvec.append(pos)
 
+
+		cls.mod = cls.mod %cls.numForms
+		
 		if cls.mod in posvec:
 			x = 33
 			cell = ((cls.multi)*x) + extra
