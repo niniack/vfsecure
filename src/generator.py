@@ -17,12 +17,13 @@ from pylibdmtx.pylibdmtx import encode
 from PIL import Image
 import hashlib
 
-import random
-
 
 from pprintpp import pprint as pp
 
 from utils import _b
+from utils import _standardWriteSTL
+
+HEADER_COUNT = 80
 
 
 class generator:
@@ -48,9 +49,39 @@ class generator:
 
     @classmethod
     def genKey(cls):
-        cls.key = random.randint(0,10000)
+        cls.key = random.randint(0,9999)
 
-        cls.key = "%04d" % key
+        cls.key = "%04d" % cls.key
+
+    @classmethod
+    def shufflePart(cls, filename):
+
+        # Create data object to store values
+        cls.dtObj = np.dtype([
+                ('normals', np.float32, (3,)),
+                ('vertices', np.float32, (3, 3)),
+                ('attrs', np.uint16, (1,))
+                ])
+
+        rf = open(filename, 'r', encoding='ascii', errors='replace')
+
+
+        # Store data in numpy arrays
+        header = np.fromfile(rf, dtype=np.uint8, count=HEADER_COUNT)
+        numTri = int(np.fromfile(rf, dtype=np.uint32, count=1))
+        part = np.fromfile(rf, dtype=cls.dtObj, count=-1)
+
+        # Close read buffer to avoid corruption
+        rf.close()
+
+        # Shuffle array of vertices/faces
+        np.random.shuffle(part)
+
+        filename = '../stl/shuffledPart.stl'
+
+        # Write shuffled STL file of part (from utils)
+        _standardWriteSTL(filename=filename, numTri=numTri, normals=part['normals'], vertices=part['vertices'])
+
 
     @classmethod
     def genMatrix(cls):
@@ -106,7 +137,8 @@ class generator:
 
     @classmethod
     def genHash(cls):
-        cls.hash = hashlib.sha256(b'../stl/FOGcode.stl')
+        cls.hash = hashlib.sha256(b'../stl/shuffledPart.stl').hexdigest()
+        pp(cls.hash)
 
     @classmethod
     def CODExy(cls):
@@ -287,11 +319,14 @@ class generator:
             cls.angles[pos][0] = rot11
             cls.angles[pos][1] = rot22
 
+        model = model % len(cls.origins)
+        
         if model in posvec:
             x = 33
             cell = ((multi)*x) + extra
             pos = cell % len(cls.origins)
             cls.angles[pos] = cls.angles[model]
+
 
         cls.angles[model] = [mr1,mr2]
 
@@ -375,17 +410,15 @@ class generator:
     @classmethod
     def writeSTL(cls):
 
-        numSpheres = np.size(cls.origins,0)
-
         #normalizing normals
         cls.normals =  cls.normals*(1/np.sqrt(np.add(cls.normals*cls.normals,1)))
 
         wf = open('../stl/FOGcode.stl', 'wb+')
         wf.write(_b("\0"*80))
 
-        wf.write(_b(np.uint32(cls.numFaces*numSpheres)))
+        wf.write(_b(np.uint32(cls.numFaces*cls.numSpheres)))
 
-        for i in range(cls.numFaces*numSpheres):
+        for i in range(cls.numFaces*cls.numSpheres):
             wf.write(_b(np.float32(cls.normals[i][0])))
             wf.write(_b(np.float32(cls.normals[i][1])))
             wf.write(_b(np.float32(cls.normals[i][2])))
@@ -406,8 +439,12 @@ def main():
 
     # create mesh object
     mesh = generator()
-    # generate DataMatrix
+    # generate key
     mesh.genKey()
+    # shuffle the inputted part
+    mesh.shufflePart(filename='../stl/knob.stl')
+    # generate hash from shuffled part
+    mesh.genHash()
     # generate DataMatrix
     mesh.genMatrix()
     # reading matrix
@@ -418,9 +455,6 @@ def main():
     mesh.FOGxy()
     # z coordinates for each x,y
     mesh.assignZ()
-
-    # print(len(mesh.origins))
-
     # encode hash in rotation
     mesh.genRotVal()
     # read model sphere from matlab data
@@ -433,7 +467,6 @@ def main():
     generator.origins = np.array(generator.origins)
     generator.angles = np.array(generator.angles)
 
-    # pp(mesh.origins)
 
     # initialize array for normals
     generator.normals = np.zeros([mesh.numFaces*mesh.numSpheres,3])
