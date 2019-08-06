@@ -107,27 +107,37 @@ class generator:
         img = imread('../images/DMTX.png')
         # takes data from one of the RGB channels
         img = img[:,:,0]
+        img = np.array(img)
         # measure height of the matrix
         hgt = len(img)
         # image must be inverted to paint the black cells
-        if not img[0,0]:
+        if img[0,0]:
             img = np.logical_not(img)
-
-        # initialize cellsize
-        cellsize = 1
         # initializing col
         col = hgt-1 #minus one because 0 is 1
 
-        # finds cellsize pixel by pixel
-        while not img[0,col-1]:
-            cellsize = cellsize + 1
-            col = col - 1
+        # counting whitespace
+        middle = round(hgt/2)
+        r=0
+        while not img[middle][r]:
+            r=r+1
+        ws=r
+        cs=0
+        while img[ws][r]:
+            r=r+1
+            cs=cs+1
+
+        # delete whitespace
+        for d in range(ws):
+            img = np.delete(img, d, 0)
+            img = np.delete(img, -(d+1), 0)
+            img = np.delete(img, d, 1)
+            img = np.delete(img, -(d+1), 1)
 
         # initializing for indexing position of all black cells
         row = 0
         col = 0
-        row1 = 0
-        col1 = 0
+        hgt = len(img)
         Resizerow = []
         cls.ResizeMTX = []
 
@@ -136,14 +146,11 @@ class generator:
             while col < hgt:
                 value = img[row,col]
                 Resizerow.append(value)
-                col = col + cellsize
-                col1 = col1 + 1
+                col = col + cs
 
             cls.ResizeMTX.append(Resizerow)
             Resizerow = []
-            row = row + cellsize
-            row1 = row1 + 1
-            col1 = 0
+            row = row + cs
             col = 0
 
     @classmethod
@@ -258,21 +265,6 @@ class generator:
         def Sort(sub_li):
             sub_li.sort(key = lambda x: (x[0], x[1]))
             return sub_li
-
-    @classmethod
-    def displayresults(cls):
-        xvals = []
-        yvals = []
-        zvals = []
-        for i in range(len(cls.origins)):
-            xvals.append(cls.origins[i][0])
-            yvals.append(cls.origins[i][1])
-            zvals.append(cls.origins[i][2])
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(xvals, yvals, zvals, c='r', marker='o')
-        plt.show()
 
     @classmethod
     def genRotVal(cls):
@@ -501,6 +493,7 @@ class generator:
         cls.dispData[0] = maxx - minx
         cls.dispData[1] = maxy - miny
         cls.dispData[2] = maxz - minz
+        print(cls.dispData)
 
 
         cls.combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]))
@@ -577,7 +570,7 @@ def main():
     # generate hash from shuffled part
     mesh.genHash()
     # generate DataMatrix
-    #mesh.genMatrix()
+    mesh.genMatrix()
     # reading matrix
     mesh.readMatrix()
     # x,y coordinates for matrix cells
