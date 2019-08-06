@@ -3,26 +3,36 @@
 # by Nishant Aswani @niniack and Michael Linares @michaellinares
 # Composite Materials and Mechanics Laboratory, Copyright 2019
 
+# input argument parser
 import argparse
+
 import os
 import math
 import struct
 import sys
+
+# data library
 import numpy as np
+
+# commonly used functions
 from utils import _b
+from utils import _extractWriteSTL
+
+# pretty printing
 from pprintpp import pprint as pp
 
+# stl manipulation library for volume count
 from stl import mesh
 
-# from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
-import matplotlib.pyplot as plt
-
+# graphing library for snapping datamatrix
 from mpl_toolkits import mplot3d
 from matplotlib import pyplot
 
-
+# image reading libraries for reading datamatrix
 from pylibdmtx.pylibdmtx import decode
 import cv2
+
+
 
 # from itertools import chain
 # from collections import Counter
@@ -161,38 +171,7 @@ class decoder():
 		rows, cols = np.where(cls.mem[:,:,3] == tag)
 		rows = list(set(rows.tolist()))
 
-		# BINARY FORMAT
-
-		# UINT8[80] – Header
-        # UINT32 – Number of triangles
-        #
-        #
-        # foreach triangle
-        # REAL32[3] – Normal vector
-        # REAL32[3] – Vertex 1
-        # REAL32[3] – Vertex 2
-        # REAL32[3] – Vertex 3
-        # UINT16 – Attribute byte count
-        # end
-
-		wf = open('../stl/cleanedPart.stl', 'wb+')
-		wf.write(_b("\0"*80))
-
-		wf.write(_b(np.uint32(len(rows))))
-
-		for i in range(int(len(rows))):
-			wf.write(_b(np.float32(cls.normals[rows[i]][0])))
-			wf.write(_b(np.float32(cls.normals[rows[i]][1])))
-			wf.write(_b(np.float32(cls.normals[rows[i]][2])))
-
-			for j in range(3):
-				wf.write(_b(np.float32(cls.vertices[rows[i]][j][0])))
-				wf.write(_b(np.float32(cls.vertices[rows[i]][j][1])))
-				wf.write(_b(np.float32(cls.vertices[rows[i]][j][2])))
-
-			wf.write(_b(np.uint16(0)))
-
-		wf.close()
+		_extractWriteSTL(filename='../stl/cleanedPart.stl', normals = cls.normals, vertices = cls.vertices, rows = rows)
 
 	# Use tag to extract values WITHOUT that tag
 	@classmethod
@@ -200,26 +179,7 @@ class decoder():
 		rows, cols = np.where(cls.mem[:,:,3] != tag)
 		rows = list(set(rows.tolist()))
 
-		wf = open('../stl/extractedCode.stl', 'wb+')
-		wf.write(_b("\0"*80))
-
-		wf.write(_b(np.uint32(len(rows))))
-
-		for i in range(int(len(rows))):
-			wf.write(_b(np.float32(cls.normals[rows[i]][0])))
-			wf.write(_b(np.float32(cls.normals[rows[i]][1])))
-			wf.write(_b(np.float32(cls.normals[rows[i]][2])))
-
-			for j in range(3):
-				wf.write(_b(np.float32(cls.vertices[rows[i]][j][0])))
-				wf.write(_b(np.float32(cls.vertices[rows[i]][j][1])))
-				wf.write(_b(np.float32(cls.vertices[rows[i]][j][2])))
-
-			wf.write(_b(np.uint16(0)))
-
-		wf.close()
-
-
+		_extractWriteSTL(filename='../stl/extractedCode.stl', normals = cls.normals, vertices = cls.vertices, rows = rows)
 
 	@classmethod
 	def findPoleNormal(cls, modelTag):
@@ -377,7 +337,7 @@ class decoder():
 
 	@classmethod
 	def readDMX(cls):
-    	offset = [37,55]
+		offset = [37,55]
 
 		# Create a new plot
 		figure = pyplot.figure()
