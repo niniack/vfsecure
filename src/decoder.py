@@ -220,19 +220,6 @@ class decoder():
 
 		return(poleVertexNormal)
 
-		# origins = findCircumcenter(poleFaces, 14)
-		# plotNormals(origins, poleFaceNormals, 14)
-		# fig = plt.figure()
-		# ax = fig.gca(projection='3d')
-		# xdata = np.zeros(int(points.size/3))
-		# ydata = np.zeros(int(points.size/3))
-		# zdata = np.zeros(int(points.size/3))
-		# for j in range(int(points.size/3)):
-		# 	xdata[j] = points[j][0]
-		# 	ydata[j] = points[j][1]
-		#   zdata[j] = points[j][2]
-		# ax.scatter(xdata, ydata, zdata, c=zdata)
-
 	@classmethod
 	def _findPole(cls, vertices):
 
@@ -252,8 +239,6 @@ class decoder():
 		poles[1] = points[int(poleLocs[1])]
 
 		return poles
-		# pp(hits)
-		# return hits, highestHitRows
 
 	@classmethod
 	def findAngleDiff(cls, model, subject):
@@ -277,10 +262,6 @@ class decoder():
 		sTheta = np.rad2deg(np.arctan2(subject[1], subject[0])) + 90
 		nsTheta = np.rad2deg(np.arctan2(nsubject[1], nsubject[0])) + 90
 
-		# pp(mPhi)
-		# pp(sPhi)
-		# pp(nsPhi)
-
 		# The smaller of the two phi differences is for the "correct" pole
 
 		rotPhi = sPhi - mPhi
@@ -292,26 +273,6 @@ class decoder():
 		if rotTheta < 0:
 		 	rotTheta = rotTheta + 90
 
-		#pp(mPhi)
-		#pp(sPhi)
-
-		#pp("-----")
-
-		#pp(mTheta)
-		#pp(sTheta)
-
-		# diffPhi2 = abs(mPhi - nsPhi)
-
-		## LEGACY
-		################################
-		# if (diffPhi1 > diffPhi2):
-		# 	rotPhi = diffPhi2
-		# 	rotTheta = abs(mTheta-nsTheta)
-		#
-		# else:
-		# 	rotPhi = diffPhi1
-		# 	rotTheta = abs(mTheta-sTheta)
-		################################
 
 		return rotPhi, rotTheta
 
@@ -452,9 +413,6 @@ def main():
 	object= decoder()
 	object.readSTL(args.filename)
 
-	# fig = plt.figure()
-	# ax = fig.gca(projection='3d')
-
 	formTag = 0
 	print("Finding forms...")
 	for rowloc in range(int(object.numTriangles)): #object.numTriangles
@@ -464,8 +422,6 @@ def main():
 			formTag += 1
 		# if(object.numForms > 1):
 		# 	break
-
-			# plotForm(form, fig, ax)
 
 	object.extractCode(object.volumeTag)
 
@@ -488,88 +444,5 @@ def main():
 	##########################################
 
 
-	# plt.show()
-
-	# origins = findCircumcenter(mesh.vectors, int(mesh.numTriangles))
-	# plotNormals(origins, normals, int(mesh.numTriangles))
-
-
 if __name__ == '__main__':
     main()
-
-
-
-##### LEGACY ##### Useful to fish from sometimes
-
-	# @classmethod
-	# def findOpposites(cls):
-	# 	# absNormals = np.absolute(cls.normals)
-	# 	# uniqueNormals = np.unique(cls.normals)
-	# 	# uniqueAbsNormals = np.unique(absNormals, axis=0)
-	# 	# print("Unique Absolute Normals:" + str(uniqueAbsNormals.size))
-	# 	# print("Unique Normals:" + str(uniqueNormals.size))
-	# 	# print("Normals:" + str(cls.normals.size))
-	#
-	# 	# a = np.array([0,0,0])
-	# 	# b = np.array([[0,0,0], [1,2,1], [3,4,3], [4,3,1]])
-	# 	#
-	# 	# result = np.all(a == b, axis=(1))
-	# 	# print(result)
-	# 	negativeNormals = np.negative(cls.normals)
-	# 	opposites  = []
-	#
-	# 	for i in range(int(cls.numTriangles)-14000):
-	# 		result = np.asarray(np.where(np.all(negativeNormals[i] == cls.normals, axis=1)))
-	# 		opposites.append([i,result])
-	#
-	# 	print(opposites)
-
-
-	# def findCircumcenter(vectors,dim):
-	#
-	# 	triOrigins = np.empty([dim,3])
-	#
-	# 	for i in range(dim):
-	# 		triOrigins[i][0] = (vectors[i][0][0]+vectors[i][1][0]+vectors[i][2][0])/3
-	# 		triOrigins[i][1] = (vectors[i][0][1]+vectors[i][1][1]+vectors[i][2][1])/3
-	# 		triOrigins[i][2] = (vectors[i][0][2]+vectors[i][1][2]+vectors[i][2][2])/3
-	#
-	# 	return triOrigins
-	#
-	# def plotNormals(origins,normals,dim):
-	#
-	# 	x = np.empty([dim,1])
-	# 	y = np.empty([dim,1])
-	# 	z = np.empty([dim,1])
-	# 	u = np.empty([dim,1])
-	# 	v = np.empty([dim,1])
-	# 	w = np.empty([dim,1])
-	#
-	# 	fig = plt.figure()
-	# 	ax = fig.gca(projection='3d')
-	#
-	#
-	#
-	# 	for i in range(dim):
-	# 		x[i] = origins[i][0]
-	# 		y[i] = origins[i][1]
-	# 		z[i] = origins[i][2]
-	# 		u[i] = normals[i][0]
-	# 		v[i] = normals[i][1]
-	# 		w[i] = normals[i][2]
-	#
-	# 	ax.quiver(x,y,z,u,v,w,length=0.01, normalize=True)
-	#
-	# 	plt.show()
-
-	# @classmethod
-	# def triangleArea(cls, vertices):
-	# 	# area = 1/2*(V x W)
-	# 	v1 = vertices[1]-vertices[0]
-	# 	v2 = vertices[2]-vertices[0]
-	#
-	# 	cross = np.cross(v1,v2)
-	# 	mag = np.linalg.norm(cross)
-	# 	area = (0.5)*mag
-	# 	area = round(area,7)
-	# 	return area
