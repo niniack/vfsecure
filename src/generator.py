@@ -28,6 +28,8 @@ from utils import _b
 from utils import _standardWriteSTL
 
 HEADER_COUNT = 80
+BUF_SIZE = 65536
+
 
 
 class generator:
@@ -159,15 +161,15 @@ class generator:
     def genHash(cls):
 
         hasher = hashlib.sha256()
-		with open('../stl/shuffledPart.stl', 'rb') as f:
-		    while True:
-		        data = f.read(BUF_SIZE)
-		        if not data:
-		            break
-		        hasher.update(data)
+        with open('../stl/shuffledPart.stl', 'rb') as f:
+            while True:
+                data = f.read(BUF_SIZE)
+                if not data:
+                    break
+                hasher.update(data)
 
-        # cls.hash = hashlib.sha256(b'../stl/shuffledPart.stl').hexdigest()
-
+        cls.hash = hasher.hexdigest()
+        print(cls.hash)
 
     @classmethod
     def CODExy(cls):

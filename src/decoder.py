@@ -387,6 +387,8 @@ class decoder():
 		        if not data:
 		            break
 		        hasher.update(data)
+				
+		cls.hash = hasher.hexdigest()
 
 		# cls.hash = hashlib.sha256(b'../stl/cleanedPart.stl').hexdigest()
 
