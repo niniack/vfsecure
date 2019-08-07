@@ -107,49 +107,58 @@ class generator:
         img = imread('../images/DMTX.png')
         # takes data from one of the RGB channels
         img = img[:,:,0]
+        img = np.array(img)
         # measure height of the matrix
         hgt = len(img)
         # image must be inverted to paint the black cells
-        if not img[0,0]:
+        if img[0,0]:
             img = np.logical_not(img)
-
-        # initialize cellsize
-        cellsize = 1
         # initializing col
         col = hgt-1 #minus one because 0 is 1
 
-        # finds cellsize pixel by pixel
-        while not img[0,col-1]:
-            cellsize = cellsize + 1
-            col = col - 1
+        # counting whitespace
+        middle = round(hgt/2)
+        r=0
+        while not img[middle][r]:
+            r=r+1
+
+        ws=r
+        cs=0
+        while img[ws][r]:
+            r=r+1
+            cs=cs+1
+
+        # delete whitespace
+        for d in range(ws):
+            print(0)
+            end = len(img)-1
+            img = np.delete(img, end, 1)
+            img = np.delete(img, 0, 1)
+            img = np.delete(img, end, 0)
+            img = np.delete(img, 0, 0)
 
         # initializing for indexing position of all black cells
         row = 0
         col = 0
-        row1 = 0
-        col1 = 0
+        hgt = len(img)
         Resizerow = []
         cls.ResizeMTX = []
 
         # reading data matrix image
         while row < hgt:
             while col < hgt:
-                value = img[row,col]
-                Resizerow.append(value)
-                col = col + cellsize
-                col1 = col1 + 1
+                Resizerow.append(img[row,col])
+                col = col + cs
 
             cls.ResizeMTX.append(Resizerow)
             Resizerow = []
-            row = row + cellsize
-            row1 = row1 + 1
-            col1 = 0
+            row = row + cs
             col = 0
 
     @classmethod
     def genHash(cls):
         cls.hash = hashlib.sha256(b'../stl/shuffledPart.stl').hexdigest()
-        pp(cls.hash)
+        
 
     @classmethod
     def CODExy(cls):
@@ -258,21 +267,6 @@ class generator:
         def Sort(sub_li):
             sub_li.sort(key = lambda x: (x[0], x[1]))
             return sub_li
-
-    @classmethod
-    def displayresults(cls):
-        xvals = []
-        yvals = []
-        zvals = []
-        for i in range(len(cls.origins)):
-            xvals.append(cls.origins[i][0])
-            yvals.append(cls.origins[i][1])
-            zvals.append(cls.origins[i][2])
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(xvals, yvals, zvals, c='r', marker='o')
-        plt.show()
 
     @classmethod
     def genRotVal(cls):
@@ -483,7 +477,7 @@ class generator:
             _solid.points[:, items] += (step * multiplier) + (padding * multiplier)
 
         # Using an existing stl file:
-        main_body = mesh.Mesh.from_file('../stl/pomo.stl')
+        main_body = mesh.Mesh.from_file('../stl/cube.stl')
         # I wanted to add another related STL to the final STL
         code_body = mesh.Mesh.from_file('../stl/FOGcode.stl')
         minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
@@ -495,16 +489,24 @@ class generator:
             translate(code_body, cls.newOrigin[0], cls.newOrigin[0] / 10., 1, 'x')
             translate(code_body, cls.newOrigin[1], cls.newOrigin[1] / 10., 1, 'y')
             translate(code_body, cls.newOrigin[2], cls.newOrigin[2] / 10., 1, 'z')
-            print('Hey')
+            print('Generated!')
 
         minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
-        cls.dispData[0] = maxx - minx
-        cls.dispData[1] = maxy - miny
-        cls.dispData[2] = maxz - minz
 
+        sign = 1
+        if (maxx + minx)/2 < 0:
+            sign = - 1
+        cls.dispData[0] = sign* (maxx - minx)
+        sign = 1
+        if (maxy + miny)/2 < 0:
+            sign = - 1
+        cls.dispData[1] = sign * (maxy - miny)
+        sign = 1
+        if (maxz + minz)/2 < 0:
+            sign = - 1
+        cls.dispData[2] = sign * (maxz - minz)
 
         cls.combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]))
-
         cls.combined.save('../stl/combined.stl', mode=stl.Mode.BINARY)  # save as ASCII
 
     @classmethod
@@ -518,9 +520,11 @@ class generator:
             axes = fig.add_subplot(111, projection='3d')
             u = np.linspace(0, 2 * np.pi, 100)
             v = np.linspace(0, np.pi, 100)
-            x = cls.dispData[0]/1.8 * np.outer(np.cos(u), np.sin(v))
-            y = cls.dispData[1]/1.8 * np.outer(np.sin(u), np.sin(v))
-            z = cls.dispData[2]/1.8 * np.outer(np.ones(np.size(u)), np.cos(v))
+            x = abs(cls.dispData[0]/1.8) * np.outer(np.cos(u), np.sin(v))
+            y = abs(cls.dispData[1]/1.8) * np.outer(np.sin(u), np.sin(v))
+            z = abs(cls.dispData[2]/1.8) * np.outer(np.ones(np.size(u)), np.cos(v))
+
+            #axes.plot_surface(x, y, z,  rstride=4, cstride=4, color='r')
             axes.plot_surface(x+cls.dispData[0]/2+x0, y+cls.dispData[1]/2+y0, z+cls.dispData[2]/2+z0,  rstride=4, cstride=4, color='r')
 
             # Load the STL files and add the vectors to the plot
@@ -562,7 +566,7 @@ class generator:
         while not clicks == 0:
             genView(0,90,x,y,z)
             clicks = float(input('Move how far in the z directon...'))
-            x = x + clicks
+            z = z + clicks
         cls.newOrigin[2]=z
 
 
@@ -573,11 +577,11 @@ def main():
     # generate key
     mesh.genKey()
     # shuffle the inputted part
-    mesh.shufflePart(filename='../stl/pomo.stl')
+    mesh.shufflePart(filename='../stl/cube.stl')
     # generate hash from shuffled part
     mesh.genHash()
     # generate DataMatrix
-    #mesh.genMatrix()
+    mesh.genMatrix()
     # reading matrix
     mesh.readMatrix()
     # x,y coordinates for matrix cells

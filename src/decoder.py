@@ -10,6 +10,7 @@ import os
 import math
 import struct
 import sys
+import re
 
 # data library
 import numpy as np
@@ -31,7 +32,7 @@ from matplotlib import pyplot
 # image reading libraries for reading datamatrix
 from pylibdmtx.pylibdmtx import decode
 import cv2
-
+import hashlib
 
 
 # from itertools import chain
@@ -298,7 +299,7 @@ class decoder():
 
 	@classmethod
 	def readDMX(cls):
-		offset = [37,55]
+		offset = [96,69]
 
 		# Create a new plot
 		figure = pyplot.figure()
@@ -376,7 +377,7 @@ class decoder():
 
 	@classmethod
 	def genHash(cls):
-		cls.hash = hashlib.sha256(b'../stl/FOGcode.stl')
+		cls.hash = hashlib.sha256(b'../stl/cleanedPart.stl').hexdigest()
 
 	@classmethod
 	def compHash(cls):
@@ -424,8 +425,11 @@ def main():
 		# 	break
 
 	object.extractCode(object.volumeTag)
-
-
+	object.extractForm(object.volumeTag)
+	object.readDMX()
+	object.readRot()
+	object.genHash()
+	object.compHash()
 
 	########## DON'T DELETE ##################
 	# model = object.findPoleNormal(cls.model)
