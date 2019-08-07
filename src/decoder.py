@@ -204,8 +204,6 @@ class decoder():
 		pRows, pCols = np.nonzero(np.all(mV == poles[1], axis=2))
 		pRows = list(set(pRows.tolist()))
 
-
-
 		poleFaceLocs = np.zeros(len(pRows))
 		poleFaces = np.zeros((len(pRows), 3, 3))
 		poleFaceNormals = np.zeros((len(pRows),3))
@@ -214,9 +212,6 @@ class decoder():
 			poleFaceLocs[i] = mRows[pRows[i]]
 			poleFaces[i] = cls.vertices[int(poleFaceLocs[i])]
 			poleFaceNormals[i] = cls.normals[int(poleFaceLocs[i])]
-
-
-
 
 		poleFaceNormals = poleFaceNormals[np.isfinite(poleFaceNormals)]
 		poleFaceNormals = np.reshape(poleFaceNormals, [int(poleFaceNormals.size/3),3])
@@ -309,7 +304,7 @@ class decoder():
 		axes = mplot3d.Axes3D(figure, proj_type = 'ortho')
 
 		# Load the STL files and add the vectors to the plot
-		extractedCode = mesh.Mesh.from_file('../stl/extractedCode.stl')
+		extractedCode = mesh.Mesh.from_file('../stl/extractedCode.stl', calculate_normals = False)
 
 		extractedCode.rotate([0,0,1],math.radians(-offset[1]))
 		extractedCode.rotate([1,0,0],math.radians(-offset[0]))
@@ -331,7 +326,9 @@ class decoder():
 		result = str(decode(cv2.imread('../images/scannedSTL.png'))[0][0])
 		result = re.findall("\d{2}",result)
 		cls.mod = int(result[0])
+		print(cls.mod)
 		cls.multi = int(result[1])
+		print(cls.multi)
 
 	@classmethod
 	def readRot(cls):
@@ -343,40 +340,46 @@ class decoder():
 			if f>10:
 				h=chr(97+(f-11))
 			return h
+		num = cls.numForms-1
+		cls.mod = cls.mod % num
 
-		model = cls.findPoleNormal(cls.mod)
-
+		model = cls.findPoleNormal(cls.mod+1) # need to have a mesh with only one form
+		#NISHANT FIX THIS
         # read all of the cells
 		posvec = []
 		cls.unhash = ''
 		extra = 0
 
 		for x in range(1,33):
-			cell = ((cls.multi)*x) - extra
-			pos = cell % cls.numForms
+			cell = ((cls.multi)*x) + extra
+			pos = cell % num
 			while pos in posvec:
 				extra = extra + 1
 				cell = ((cls.multi)*x) + extra
-				pos = cell % cls.numForms
+				pos = cell % num
 			posvec.append(pos)
+			print(posvec)
 
-
-		cls.mod = cls.mod %cls.numForms
-
-		if cls.mod in posvec:
+		while cls.mod in posvec:
 			x = 33
 			cell = ((cls.multi)*x) + extra
-			pos = cell % cls.numForms
+			pos = cell % num
+			print('hello')
 			posvec[(cls.mod in posvec)-1]=pos
 
+		print(posvec)
 		for y in range(len(posvec)):
 			pos = posvec[y]
-			subject = cls.findPoleNormal(pos)
+			subject = cls.findPoleNormal(pos+1) # mis counting number of forms #NISHANT FIX THIS
 			val = cls.findAngleDiff(model,subject)
 			val1 = toHEX(math.ceil(val[0]*16/90))
 			val2 = toHEX(math.ceil(val[1]*16/90))
 			cls.unhash = cls.unhash + val1
 			cls.unhash = cls.unhash + val2
+
+		print(posvec)
+
+		print(cls.unhash)
 
 	@classmethod
 	def genHash(cls):
@@ -387,8 +390,9 @@ class decoder():
 		        if not data:
 		            break
 		        hasher.update(data)
-				
+
 		cls.hash = hasher.hexdigest()
+		print(cls.hash)
 
 		# cls.hash = hashlib.sha256(b'../stl/cleanedPart.stl').hexdigest()
 

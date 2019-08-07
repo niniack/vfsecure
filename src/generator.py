@@ -64,7 +64,6 @@ class generator:
     @classmethod
     def genKey(cls):
         cls.key = random.randint(0,9999)
-
         cls.key = "%04d" % cls.key
 
     @classmethod
@@ -132,7 +131,6 @@ class generator:
 
         # delete whitespace
         for d in range(ws):
-            print(0)
             end = len(img)-1
             img = np.delete(img, end, 1)
             img = np.delete(img, 0, 1)
@@ -290,7 +288,6 @@ class generator:
             i, p, d = s.partition('.')
             return '.'.join([i, (d+'0'*n)[:n]])
 
-
         spec = 90
         cls.angles = []
         for a in range(len(cls.origins)):
@@ -302,6 +299,7 @@ class generator:
 
         model = int(str(cls.key)[:2])
         multi = int(str(cls.key)[2:4])
+        print(model,multi)
 
         mr1 = spec*random.random()
         mr2 = spec*random.random()
@@ -310,6 +308,7 @@ class generator:
 
         posvec = []
         extra = 0
+        num = len(cls.origins)
         for x in range(1,33):
             digits = cls.hash[2*(x-1):2*x]
             ran1 = random.random()
@@ -324,27 +323,29 @@ class generator:
 
             rot11 = float(truncate(((mr1+rot1) % spec), 5))
             rot22 = float(truncate(((mr2+rot2) % spec), 5))
-            cell = ((multi)*x) - extra
-            pos = cell % len(cls.origins)
+            cell = ((multi)*x) + extra
+            pos = cell % num
             while pos in posvec:
                 extra = extra + 1
                 cell = ((multi)*x) + extra
-                pos = cell % len(cls.origins)
+                pos = cell % num
 
-            posvec.append(pos)
             cls.angles[pos][0] = rot11
             cls.angles[pos][1] = rot22
+            posvec.append(pos)
 
-        model = model % len(cls.origins)
-
-        if model in posvec:
+        model = model % num
+        while model in posvec:
             x = 33
             cell = ((multi)*x) + extra
-            pos = cell % len(cls.origins)
+            pos = cell % num
+            posvec[(cls.mod in posvec)-1]=pos
             cls.angles[pos] = cls.angles[model]
-
+            print(posvec)
 
         cls.angles[model] = [mr1,mr2]
+        print(posvec)
+        print(num)
 
     @classmethod
     def readModel(cls):
@@ -518,7 +519,6 @@ class generator:
         cls.dispData[2] = sign * (maxz - minz)
 
         cls.combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]), calculate_normals=False)
-        pp(cls.combined.data)
         cls.combined.save('../stl/combined.stl', mode=stl.Mode.BINARY, update_normals=False)  # save as ASCII
 
         # cls.combined = np.concatenate([main_body.data, code_body.data])
