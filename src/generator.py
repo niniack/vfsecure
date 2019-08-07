@@ -20,7 +20,8 @@ from matplotlib import pyplot
 from pylibdmtx.pylibdmtx import encode
 from PIL import Image
 import hashlib
-
+import os.path
+import sys
 
 from pprintpp import pprint as pp
 
@@ -158,7 +159,7 @@ class generator:
     @classmethod
     def genHash(cls):
         cls.hash = hashlib.sha256(b'../stl/shuffledPart.stl').hexdigest()
-        
+
 
     @classmethod
     def CODExy(cls):
@@ -477,9 +478,9 @@ class generator:
             _solid.points[:, items] += (step * multiplier) + (padding * multiplier)
 
         # Using an existing stl file:
-        main_body = mesh.Mesh.from_file('../stl/cube.stl')
+        main_body = mesh.Mesh.from_file('../stl/shuffledPart.stl', calculate_normals=False)
         # I wanted to add another related STL to the final STL
-        code_body = mesh.Mesh.from_file('../stl/FOGcode.stl')
+        code_body = mesh.Mesh.from_file('../stl/FOGcode.stl', calculate_normals=False)
         minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
         code_body.rotate([1,0,0],math.radians(cls.offset[0]))
         code_body.rotate([0,0,1],math.radians(cls.offset[1]))
@@ -506,8 +507,12 @@ class generator:
             sign = - 1
         cls.dispData[2] = sign * (maxz - minz)
 
-        cls.combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]))
-        cls.combined.save('../stl/combined.stl', mode=stl.Mode.BINARY)  # save as ASCII
+        cls.combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]), calculate_normals=False)
+        pp(cls.combined.data)
+        cls.combined.save('../stl/combined.stl', mode=stl.Mode.BINARY, update_normals=False)  # save as ASCII
+
+        # cls.combined = np.concatenate([main_body.data, code_body.data])
+
 
     @classmethod
     def codeplacementGUI(cls):
@@ -550,34 +555,41 @@ class generator:
 
         clicks = 1
         while not clicks == 0:
-             genView(90,90,x,y,z)
+             # genView(90,90,x,y,z)
              clicks = float(input('Move how far in the x directon...'))
              x = x + clicks
         cls.newOrigin[0]=x
 
         clicks = 1
         while not clicks == 0:
-            genView(0,0,x,y,z)
+            # genView(0,0,x,y,z)
             clicks = float(input('Move how far in the y directon...'))
             y = y + clicks
         cls.newOrigin[1]=y
 
         clicks = 1
         while not clicks == 0:
-            genView(0,90,x,y,z)
+            # genView(0,90,x,y,z)
             clicks = float(input('Move how far in the z directon...'))
             z = z + clicks
         cls.newOrigin[2]=z
 
 
 def main():
+    parser = argparse.ArgumentParser(description='DMX code embedder')
+    parser.add_argument("filename", help="The filename of the STL")
+    args = parser.parse_args()
+
+    if (not os.path.exists(args.filename)):
+	    print ("File", args.filename, "does not exist.")
+	    sys.exit(1)
 
     # create mesh object
     mesh = generator()
     # generate key
     mesh.genKey()
     # shuffle the inputted part
-    mesh.shufflePart(filename='../stl/cube.stl')
+    mesh.shufflePart(filename=args.filename)
     # generate hash from shuffled part
     mesh.genHash()
     # generate DataMatrix
