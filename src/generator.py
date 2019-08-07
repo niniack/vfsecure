@@ -11,7 +11,6 @@ import operator
 from utils import _b
 import math
 import random
-import hashlib
 import stl
 from stl import mesh
 from mpl_toolkits import mplot3d
@@ -158,7 +157,16 @@ class generator:
 
     @classmethod
     def genHash(cls):
-        cls.hash = hashlib.sha256(b'../stl/shuffledPart.stl').hexdigest()
+
+        hasher = hashlib.sha256()
+		with open('../stl/shuffledPart.stl', 'rb') as f:
+		    while True:
+		        data = f.read(BUF_SIZE)
+		        if not data:
+		            break
+		        hasher.update(data)
+
+        # cls.hash = hashlib.sha256(b'../stl/shuffledPart.stl').hexdigest()
 
 
     @classmethod

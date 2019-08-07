@@ -35,6 +35,7 @@ import cv2
 import hashlib
 
 
+
 # from itertools import chain
 # from collections import Counter
 
@@ -42,6 +43,8 @@ HEADER_COUNT = 80
 TRI_BYTE_COUNT = 4
 DATA_COUNT = 3
 ATTR_COUNT = 1
+
+BUF_SIZE = 65536
 
 class decoder():
 
@@ -377,7 +380,15 @@ class decoder():
 
 	@classmethod
 	def genHash(cls):
-		cls.hash = hashlib.sha256(b'../stl/cleanedPart.stl').hexdigest()
+		hasher = hashlib.sha256()
+		with open('../stl/cleanedPart.stl', 'rb') as f:
+		    while True:
+		        data = f.read(BUF_SIZE)
+		        if not data:
+		            break
+		        hasher.update(data)
+
+		# cls.hash = hashlib.sha256(b'../stl/cleanedPart.stl').hexdigest()
 
 	@classmethod
 	def compHash(cls):
