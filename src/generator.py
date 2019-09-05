@@ -22,8 +22,6 @@ import hashlib
 import os.path
 import sys
 
-from pprintpp import pprint as pp
-
 from utils import _b
 from utils import _standardWriteSTL
 
@@ -37,7 +35,6 @@ class generator:
     #dmgen vars
     key = None
     hash = None
-    # print(len(hash))
     ResizeMTX = None
     fogdim = None
     origins = None
@@ -63,6 +60,7 @@ class generator:
 
     @classmethod
     def genKey(cls):
+        #Key of [model, multi] to be stored in data matrix is generated as a 4 digit string
         cls.key = random.randint(0,9999)
         cls.key = "%04d" % cls.key
 
@@ -117,14 +115,16 @@ class generator:
         # initializing col
         col = hgt-1 #minus one because 0 is 1
 
-        # counting whitespace
+        # indexing the middle of ther code
         middle = round(hgt/2)
         r=0
+        # count white space
         while not img[middle][r]:
             r=r+1
 
-        ws=r
+        ws=r # store whitespace
         cs=0
+        # count and store cellsize
         while img[ws][r]:
             r=r+1
             cs=cs+1
@@ -157,7 +157,7 @@ class generator:
 
     @classmethod
     def genHash(cls):
-
+        #generate sha256 hash based on the shuffled part stl
         hasher = hashlib.sha256()
         with open('../stl/shuffledPart.stl', 'rb') as f:
             while True:
@@ -167,7 +167,6 @@ class generator:
                 hasher.update(data)
 
         cls.hash = hasher.hexdigest()
-        print(cls.hash)
 
     @classmethod
     def CODExy(cls):
@@ -216,62 +215,62 @@ class generator:
             npad[axis] = (int(leftbuff), int(pad_size))
             b = np.pad(a, pad_width=npad, mode='constant', constant_values=0)
 
-        cls.codecoords = []
+        cls.codecords = []
         for p in range(cls.fogdim):
             for o in range(cls.fogdim):
                 if b[p][o]:
                     XYc = [p,o]
-                    cls.codecoords.append(XYc)
+                    cls.codecords.append(XYc)
 
     @classmethod
     def FOGxy(cls):
-        cls.fogdim
+
         count = 0
-        density = 0.5
-        noc =  math.floor(density *((cls.fogdim/2)**2)*3.14)
+        density = 0.5 # number of spheres to generated to empty space
+        noc =  math.floor(density *((cls.fogdim/2)**2)*3.14) # predetermine the number of spheres in fog based on density
         cls.origins = []
         redo = 1
 
-        for i in range(noc):
-            x = random.randint(0,cls.fogdim)
+        for i in range(noc): # generate placement for each fog sphere
+            x = random.randint(0,cls.fogdim) # pick random x,y cord based on fog size
             y = random.randint(0,cls.fogdim)
             XY = [x,y]
             redo = 0
-            if XY in cls.origins:
+            if XY in cls.origins: # if this x,y cord has already been already been generated then, generate cords until there is a new one
                 count = count + 1
                 redo = 1
-            while ((x-cls.fogdim/2)**2) + ((y-cls.fogdim/2)**2) > (cls.fogdim/2)**2 or redo:
+            while ((x-cls.fogdim/2)**2) + ((y-cls.fogdim/2)**2) > (cls.fogdim/2)**2 or redo: # check to make sure that cord is within the fog sphere
                 x = random.randint(0,cls.fogdim)
                 y = random.randint(0,cls.fogdim)
-                XY = [x, y]
+                XY = [x,y]
                 redo = 0
                 if XY in cls.origins:
                     count = count + 1
                     redo = 1
 
-            cls.origins.append(XY)
+            cls.origins.append(XY) # create a list of fog cords
 
-        for c in range(len(cls.dt)):
+        for c in range(len(cls.dt)): # remove all the corrds that are within area of the DMTX
             if cls.dt[c] in cls.origins:
                 cls.origins.remove(cls.dt[c])
 
-        cls.origins = cls.origins + cls.codecoords
+        cls.origins = cls.origins + cls.codecords # add fog cords with code cords
 
     @classmethod
     def assignZ(cls):
-        # cls.origins
-        count = 0
 
-        for t in range(len(cls.origins)):
+        count = 0
+        for t in range(len(cls.origins)): # generate a z value for each cord
             x = cls.origins[t][0]
             y = cls.origins[t][1]
             z = random.randint(0,cls.fogdim)
 
-            while ((x-cls.fogdim/2)**2) + ((y-cls.fogdim/2)**2) + ((z-cls.fogdim/2)**2) > (cls.fogdim/2)**2 and count < 10000:
+            while ((x-cls.fogdim/2)**2) + ((y-cls.fogdim/2)**2) + ((z-cls.fogdim/2)**2) > (cls.fogdim/2)**2 and count < 10000: # check to make sure that the
+                # check to make sure that the z cord is within the fog sphere x^2 +y^2 +z^2 = r^2
                 count = count + 1
                 z = random.randint(0,cls.fogdim)
             count = 0
-            cls.origins[t].append(z)
+            cls.origins[t].append(z) # index all the cords
 
         def Sort(sub_li):
             sub_li.sort(key = lambda x: (x[0], x[1]))
@@ -290,18 +289,18 @@ class generator:
 
         spec = 90
         cls.angles = []
-        for a in range(len(cls.origins)):
+        for a in range(len(cls.origins)):  # generate x and z rotation for each sphere
             rot1 = spec*random.random()
             rot2 = spec*random.random()
             rot1 = float(truncate(rot1, 5))
             rot2 = float(truncate(rot2, 5))
             cls.angles.append([rot1, rot2])
 
-        model = int(str(cls.key)[:2])
+        model = int(str(cls.key)[:2]) # use model and key
         multi = int(str(cls.key)[2:4])
-        print(model,multi)
 
-        mr1 = spec*random.random()
+
+        mr1 = spec*random.random() # generate model angles
         mr2 = spec*random.random()
         mr1 = float(truncate(mr1, 5))
         mr2 = float(truncate(mr2, 5))
@@ -310,23 +309,23 @@ class generator:
         extra = 0
         num = len(cls.origins)
         for x in range(1,33):
-            digits = cls.hash[2*(x-1):2*x]
+            digits = cls.hash[2*(x-1):2*x] # index charactures in hash, two at a time
             ran1 = random.random()
-            while ran1 > 0.95 or ran1 < 0.05:
+            while ran1 > 0.95 or ran1 < 0.05: # random offset with ends cut off to prevernt boundry contion issues with reading angles
                 ran1 = random.random()
             ran2 = random.random()
             while ran2 > 0.95 or ran2 < 0.05:
                 ran2 = random.random()
 
-            rot1 = (int(digits[0], 16) * spec/16 + ran1 * spec/16)
+            rot1 = (int(digits[0], 16) * spec/16 + ran1 * spec/16) #hex is converted to angle wihtin the selected range
             rot2 = (int(digits[1], 16) * spec/16 + ran2 * spec/16)
 
-            rot11 = float(truncate(((mr1+rot1) % spec), 5))
+            rot11 = float(truncate(((mr1+rot1) % spec), 5)) # model is added to information carryting spheres
             rot22 = float(truncate(((mr2+rot2) % spec), 5))
-            cell = ((multi)*x) + extra
-            pos = cell % num
-            while pos in posvec:
-                extra = extra + 1
+            cell = ((multi)*x) + extra # cell is selected for indexing
+            pos = cell % num # moding (important prnciple)
+            while pos in posvec: # incase a sphere is selected twice
+                extra = extra + 1 # move to the next one
                 cell = ((multi)*x) + extra
                 pos = cell % num
 
@@ -334,18 +333,20 @@ class generator:
             cls.angles[pos][1] = rot22
             posvec.append(pos)
 
-        model = model % num
-        while model in posvec:
+        model = model % num # incase model is greater than num
+        while model in posvec: # if model is a selected sphere
+            # find the next availbe sphere in the multi and store the sphere with the model index insidee
             x = 33
             cell = ((multi)*x) + extra
             pos = cell % num
+            while pos in posvec:
+                extra = extra + 1
+                cell = ((multi)*x) + extra
+                pos = cell % num
             posvec[(cls.mod in posvec)-1]=pos
             cls.angles[pos] = cls.angles[model]
-            print(posvec)
 
-        cls.angles[model] = [mr1,mr2]
-        print(posvec)
-        print(num)
+        cls.angles[model] = [mr1,mr2] # the model is stored in model
 
     @classmethod
     def readModel(cls):
@@ -492,13 +493,12 @@ class generator:
         main_body = mesh.Mesh.from_file('../stl/shuffledPart.stl', calculate_normals=False)
         # I wanted to add another related STL to the final STL
         code_body = mesh.Mesh.from_file('../stl/FOGcode.stl', calculate_normals=False)
-        minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
-        code_body.rotate([1,0,0],math.radians(cls.offset[0]))
+
+        code_body.rotate([1,0,0],math.radians(cls.offset[0])) # store offset angles
         code_body.rotate([0,0,1],math.radians(cls.offset[1]))
 
-
         if final:
-            translate(code_body, cls.newOrigin[0], cls.newOrigin[0] / 10., 1, 'x')
+            translate(code_body, cls.newOrigin[0], cls.newOrigin[0] / 10., 1, 'x') # move based on  code placement GUI
             translate(code_body, cls.newOrigin[1], cls.newOrigin[1] / 10., 1, 'y')
             translate(code_body, cls.newOrigin[2], cls.newOrigin[2] / 10., 1, 'z')
             print('Generated!')
@@ -506,9 +506,9 @@ class generator:
         minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(code_body)
 
         sign = 1
-        if (maxx + minx)/2 < 0:
+        if (maxx + minx)/2 < 0: # this has to do with placing the code in the positive or negative ditection in each axis based on the sign of the midpoint
             sign = - 1
-        cls.dispData[0] = sign* (maxx - minx)
+        cls.dispData[0] = sign * (maxx - minx)
         sign = 1
         if (maxy + miny)/2 < 0:
             sign = - 1
@@ -520,9 +520,6 @@ class generator:
 
         cls.combined = mesh.Mesh(np.concatenate([main_body.data, code_body.data]), calculate_normals=False)
         cls.combined.save('../stl/combined.stl', mode=stl.Mode.BINARY, update_normals=False)  # save as ASCII
-
-        # cls.combined = np.concatenate([main_body.data, code_body.data])
-
 
     @classmethod
     def codeplacementGUI(cls):
@@ -565,25 +562,24 @@ class generator:
 
         clicks = 1
         while not clicks == 0:
-             # genView(90,90,x,y,z)
+             genView(90,90,x,y,z)
              clicks = float(input('Move how far in the x directon...'))
              x = x + clicks
         cls.newOrigin[0]=x
 
         clicks = 1
         while not clicks == 0:
-            # genView(0,0,x,y,z)
+            genView(0,0,x,y,z)
             clicks = float(input('Move how far in the y directon...'))
             y = y + clicks
         cls.newOrigin[1]=y
 
         clicks = 1
         while not clicks == 0:
-            # genView(0,90,x,y,z)
+            genView(0,90,x,y,z)
             clicks = float(input('Move how far in the z directon...'))
             z = z + clicks
         cls.newOrigin[2]=z
-
 
 def main():
     parser = argparse.ArgumentParser(description='DMX code embedder')
